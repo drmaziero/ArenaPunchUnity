@@ -1,0 +1,121 @@
+# ===================================
+# Unity .gitignore - adaptado
+# ===================================
+
+# --- Diretórios temporários e cache ---
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+UserSettings/
+
+# --- Cache de compilação do sistema ---
+MemoryCaptures/
+sysinfo.txt
+
+# --- Crash Reports ---
+*.stackdump
+
+# --- Arquivos do Unity Collaborate ---
+.collabignore
+.collab/
+*.collabignore
+
+# --- Cache do Addressables ---
+/ServerData/
+/AssetBundles/
+
+# --- Cache de il2cpp ---
+/il2cpp_cache/
+
+# --- Diretórios de builds dedicadas ---
+/DedicatedServerBuild/
+/DedicatedServer/
+
+# --- Configurações locais ---
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+
+# --- Diretórios gerados por IDEs ---
+.vscode/
+.idea/
+*.iml
+
+# --- Logs ---
+*.log
+*.vsidx
+*.vsp
+*.vspx
+*.pid
+*.seed
+*.pid.lock
+
+# --- Arquivos do Unity Cloud Build ---
+/[Uu]serSettings/UnityConnectSettings.asset
+/[Uu]serSettings/EditorUserSettings.asset
+
+# --- Mac e sistema ---
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+*.swp
+
+# --- Windows ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Linux ---
+*~
+.nfs*
+
+# --- Test Runner Results ---
+/[Tt]estResults/
+
+# --- Plastic SCM (caso use) ---
+/PlasticWorkspace/
+
+# --- Rider ---
+.idea/
+*.sln.iml
+
+# --- Local Cache ---
+/UnityCache/
+
+# --- Unity Cloud Diagnostics ---
+/CrashReports/
+/Diagnostics/
+
+# --- Arquivos de build exportados ---
+/Builds/
+/Build/
+
+# --- Dedicated Server específico ---
+/ServerBuild/
+/GameServer/
+/bin/
+/obj/
+/logs/
+
+# --- Pacotes e dependências locais ---
+/Packages/com.unity.package-manager-ui/
+/Packages/com.unity.collab-proxy/
+
+# --- Cache do Addressables ---
+/Library/com.unity.addressables/
+
+# --- Se quiser manter cenas de build mas ignorar builds pesadas ---
+# !/BuildSettings.asset
