@@ -38,6 +38,7 @@ namespace Matchmaking
 
         private async Task FindMatchAsync()
         {
+            FindMatchButton.gameObject.SetActive(false);
             var players = new List<Player>()
                 { new(AuthenticationService.Instance.PlayerId, new Dictionary<string, object>()) };
             var attributes = new Dictionary<string, object>();
@@ -64,7 +65,7 @@ namespace Matchmaking
                         case MultiplayAssignment.StatusOptions.Found:
                             transport.SetConnectionData(assignment.Ip, (ushort)assignment.Port);
                             bool result = NetworkManager.Singleton.StartClient();
-                            StatusDebug.SetText($"[CLIENT] Start Client: {result}");
+                            StatusDebug.SetText($"[CLIENT] Start Client: {result} on {assignment.Ip}:{assignment.Port}");
                             return result;
 
                         case MultiplayAssignment.StatusOptions.InProgress:

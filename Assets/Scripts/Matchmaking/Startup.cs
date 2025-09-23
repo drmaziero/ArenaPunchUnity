@@ -11,8 +11,10 @@ namespace Matchmaking
         private void Start()
         {
 #if UNITY_SERVER
+            Debug.Log("Starting Server...");
             SceneManager.LoadScene(GameManager.SceneNames.Server.ToString());
 #else
+            Debug.Log("Starting Client...");
             SceneManager.LoadScene(GameManager.SceneNames.Client.ToString());
 #endif
         }
