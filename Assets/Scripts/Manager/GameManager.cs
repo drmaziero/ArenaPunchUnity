@@ -11,6 +11,8 @@ namespace Manager
        {
            Lobby = 0,
            Game = 1,
+           Client = 2,
+           Server = 3,
        }
        
        public static GameManager Instance { get; private set; }

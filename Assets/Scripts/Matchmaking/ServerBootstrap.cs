@@ -1,10 +1,16 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Controllers;
 using Manager;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
+using Unity.Services.Matchmaker;
+using Unity.Services.Matchmaker.Models;
 using Unity.Services.Multiplay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,68 +21,92 @@ namespace Matchmaking
     public class ServerBootstrap : MonoBehaviour
     {
         [field: SerializeField] 
-        private ushort FallbackPort { get; set; } = 7777;
-        [field: SerializeField] 
         private int MinPlayersToStart { get; set; } = 2;
         [field: SerializeField] 
         private int MaxPlayersToStart { get; set; } = 4;
 
         private IServerQueryHandler serverQuery;
         private int connectedCount;
+        private string ticketId;
 
-        private async void Awake()
+        private void Start()
         {
-#if UNITY_SERVER
-            await StartHeadlessServerAsync();
-#else
-
-        if (System.Environment.GetCommandLineArgs().Any(a => a.ToLower() == "-dedicated"))
-            await StartHeadlessServerAsync();
-#endif
+            DontDestroyOnLoad(gameObject);
+            StartServer();
+            StartCoroutine(ApproveBackfillTicketEverySecond());
         }
 
-        private async Task StartHeadlessServerAsync()
+        private async void StartServer()
         {
             if (UnityServices.State != ServicesInitializationState.Initialized)
                 await UnityServices.InitializeAsync();
 
-            if (!AuthenticationService.Instance.IsSignedIn)
-                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            var server = MultiplayService.Instance.ServerConfig;
+            var unityTransport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            unityTransport.SetConnectionData("0.0.0.0", server.Port);
+            Debug.Log($"Network Transport {unityTransport.ConnectionData.Address}:{unityTransport.ConnectionData.Port}");
 
-            ushort portToBind = FallbackPort;
-            try
+            if (!NetworkManager.Singleton.StartServer())
             {
-                var serverConfig = MultiplayService.Instance.ServerConfig;
-                if (serverConfig.AllocationId != "0")
-                    portToBind = (ushort)serverConfig.Port;
+                Debug.LogError("Failed to start Server");
+                throw new Exception("Failed o start server");
             }
-            catch
-            {
-                Debug.LogWarning("[SERVER] Sem Multiplay config; usando fallbackPort para testes locais.");
-            }
+            
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+            NetworkManager.Singleton.OnServerStopped += b => { Debug.Log("Server Stopped"); };
+            Debug.Log($"Starter Server {unityTransport.ConnectionData.Address}:{unityTransport.ConnectionData.Port}");
 
-            var networkManager = NetworkManager.Singleton;
-            var unityTransport = networkManager.GetComponent<UnityTransport>();
-            unityTransport.SetConnectionData("0.0.0.0", portToBind);
+            var callbacks = new MultiplayEventCallbacks();
+            callbacks.Allocate += OnAllocate;
+            callbacks.Deallocate += OnDeallocate;
+            callbacks.Error += OnError;
+            callbacks.SubscriptionStateChanged += OnSubscriptionStateChanged;
 
-            networkManager.OnServerStarted += () => Debug.Log($"[SERVER] Started @ :{portToBind}");
-            networkManager.OnClientConnectedCallback += OnClientConnected;
-            networkManager.OnClientDisconnectCallback += OnClientDisconnected;
+            var events = await MultiplayService.Instance.SubscribeToServerEventsAsync(callbacks);
+            await CreateBackfillTicket();
+        }
 
-            if (!networkManager.StartServer())
-            {
-                Debug.LogError("[SERVER] Falha ao iniciar o servidor.");
-                return;
-            }
+        private async Task CreateBackfillTicket()
+        {
+            MatchmakingResults results =
+                await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
 
-            serverQuery = await MultiplayService.Instance.StartServerQueryHandlerAsync(
-                maxPlayers: (ushort)MaxPlayersToStart,
-                serverName: "ArenaPunchServer",
-                gameType: "DefaultMatch",
-                buildId: "150625",
-                map: "Game"
-            );
-            UpdateServerQuery();
+            Debug.Log(
+                $"Environment: {results.EnvironmentId} MatchId: {results.MatchId} Match Properties: {results.MatchProperties}");
+
+            var backfillTicketProperties = new BackfillTicketProperties(results.MatchProperties);
+            string queueName = "ArenaPunchQueue";
+            string connectionString = MultiplayService.Instance.ServerConfig.IpAddress + ":" +
+                                      MultiplayService.Instance.ServerConfig.Port;
+
+            var options = new CreateBackfillTicketOptions(queueName, connectionString, new Dictionary<string, object>(),
+                backfillTicketProperties);
+            
+            Debug.Log("Requesting backfill ticket");
+            ticketId = await MatchmakerService.Instance.CreateBackfillTicketAsync(options);
+        }
+
+        private void OnSubscriptionStateChanged(MultiplayServerSubscriptionState obj)
+        {
+            Debug.Log($"Subscription state changed: {obj}");
+        }
+
+        private void OnError(MultiplayError obj)
+        {
+            Debug.Log($"On Error: {obj}");
+        }
+
+        private async void OnDeallocate(MultiplayDeallocation obj)
+        {
+           Debug.Log($"Deallocation received: {obj}");
+           await MultiplayService.Instance.UnreadyServerAsync();
+        }
+
+        private async void OnAllocate(MultiplayAllocation obj)
+        {
+            Debug.Log($"Allocation received: {obj}");
+            await MultiplayService.Instance.ReadyServerForPlayersAsync();
         }
 
         private void OnDestroy()
@@ -93,7 +123,6 @@ namespace Matchmaking
         private void OnClientConnected(ulong clientId)
         {
             connectedCount++;
-            UpdateServerQuery();
 
             if (NetworkManager.Singleton.IsServer &&
                 NetworkManager.Singleton.SceneManager != null &&
@@ -109,18 +138,29 @@ namespace Matchmaking
         private void OnClientDisconnected(ulong clientId)
         {
             connectedCount = Mathf.Max(0, connectedCount - 1);
-            UpdateServerQuery();
         }
 
-        private void UpdateServerQuery()
+        private IEnumerator ApproveBackfillTicketEverySecond()
         {
-            if (serverQuery == null) return;
-            serverQuery.CurrentPlayers = (ushort)connectedCount;
-            serverQuery.MaxPlayers = (ushort)MaxPlayersToStart;
-            serverQuery.BuildId = "150625";
-            serverQuery.Map = "Game";
-            serverQuery.ServerName = "ArenaPunchServer";
-            serverQuery.UpdateServerCheck();
+            for (int i = 4; i >= 0; i--)
+            {
+                Debug.Log($"Waiting {i} seconds to start backfill");
+                yield return new WaitForSeconds(1);
+            }
+
+            while (true)
+            {
+                yield return new WaitForSeconds(1);
+                if (string.IsNullOrEmpty(ticketId))
+                {
+                    Debug.Log("No backfill ticket to approve");
+                    continue;
+                }
+                
+                Debug.Log($"Doing backfill approval for ticket ID: {ticketId}");
+                yield return MatchmakerService.Instance.ApproveBackfillTicketAsync(ticketId);
+                Debug.Log($"Approved backfill ticket {ticketId}");
+            }
         }
     }
 }
