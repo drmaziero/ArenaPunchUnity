@@ -73,7 +73,8 @@ namespace Matchmaking
                             return false;
 
                         case MultiplayAssignment.StatusOptions.Failed:
-                            StatusDebug.SetText("[CLIENT] Matchmaker failed.");
+                            Debug.Log($"[CLIENT] Matchmaker failed. {assignment.Message}");
+                            StatusDebug.SetText($"[CLIENT] Matchmaker failed. {assignment.Message}");
                             return false;
 
                         case MultiplayAssignment.StatusOptions.Timeout:

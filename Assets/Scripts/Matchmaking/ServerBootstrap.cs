@@ -31,16 +31,18 @@ namespace Matchmaking
 
         private void Start()
         {
+#if  UNITY_SERVER && !UNITY_EDITOR
             DontDestroyOnLoad(gameObject);
             StartServer();
             StartCoroutine(ApproveBackfillTicketEverySecond());
+#endif
         }
 
         private async void StartServer()
         {
             if (UnityServices.State != ServicesInitializationState.Initialized)
                 await UnityServices.InitializeAsync();
-
+            
             var server = MultiplayService.Instance.ServerConfig;
             var unityTransport = NetworkManager.Singleton.GetComponent<UnityTransport>();
             unityTransport.SetConnectionData("0.0.0.0", server.Port);
@@ -160,6 +162,14 @@ namespace Matchmaking
                 Debug.Log($"Doing backfill approval for ticket ID: {ticketId}");
                 yield return MatchmakerService.Instance.ApproveBackfillTicketAsync(ticketId);
                 Debug.Log($"Approved backfill ticket {ticketId}");
+            }
+        }
+        
+        private void OnApplicationQuit()
+        {
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            {
+                NetworkManager.Singleton.Shutdown();
             }
         }
     }
