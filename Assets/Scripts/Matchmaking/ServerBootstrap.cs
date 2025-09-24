@@ -23,7 +23,7 @@ namespace Matchmaking
         [field: SerializeField] 
         private int MinPlayersToStart { get; set; } = 2;
         [field: SerializeField] 
-        private int MaxPlayersToStart { get; set; } = 4;
+        private int MaxPlayersToStart { get; set; } = 8;
 
         private IServerQueryHandler serverQuery;
         private int connectedCount;
@@ -59,6 +59,9 @@ namespace Matchmaking
             NetworkManager.Singleton.OnServerStopped += b => { Debug.Log("Server Stopped"); };
             Debug.Log($"Starter Server {unityTransport.ConnectionData.Address}:{unityTransport.ConnectionData.Port}");
 
+            serverQuery = await MultiplayService.Instance.StartServerQueryHandlerAsync((ushort)MaxPlayersToStart,
+                "ArenaPunch", "All", Application.version, GameManager.SceneNames.Server.ToString());
+
             var callbacks = new MultiplayEventCallbacks();
             callbacks.Allocate += OnAllocate;
             callbacks.Deallocate += OnDeallocate;
@@ -67,6 +70,18 @@ namespace Matchmaking
 
             var events = await MultiplayService.Instance.SubscribeToServerEventsAsync(callbacks);
             await CreateBackfillTicket();
+        }
+        
+        private void Update()
+        {
+#if UNITY_SERVER && !UNITY_EDITOR
+            if (serverQuery != null)
+            {
+                serverQuery.CurrentPlayers = (ushort)connectedCount;
+                serverQuery.MaxPlayers = (ushort)MaxPlayersToStart;
+                serverQuery.UpdateServerCheck();
+            }
+#endif
         }
 
         private async Task CreateBackfillTicket()
