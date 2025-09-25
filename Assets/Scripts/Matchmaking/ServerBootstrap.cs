@@ -52,7 +52,6 @@ namespace Matchmaking
             connectedClients = new List<string>();
             DontDestroyOnLoad(gameObject);
             StartServer();
-            StartCoroutine(ApproveBackfillTicketEverySecond());
 #endif
         }
 
