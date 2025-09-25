@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Services.Multiplay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,8 +11,11 @@ namespace Manager
         [field: SerializeField]
         private GameObject PlayerPrefab { get; set; }
 
-        private void Awake()
+        private async void Awake()
         {
+#if UNITY_SERVER
+             await MultiplayService.Instance.UnreadyServerAsync();
+#endif
             NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnSceneLoaded;
         }
 
