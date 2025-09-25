@@ -31,7 +31,7 @@ namespace Matchmaking
 
         private void Start()
         {
-#if  UNITY_SERVER && !UNITY_EDITOR
+#if  UNITY_SERVER
             DontDestroyOnLoad(gameObject);
             StartServer();
             StartCoroutine(ApproveBackfillTicketEverySecond());
@@ -74,13 +74,14 @@ namespace Matchmaking
         
         private void Update()
         {
-#if UNITY_SERVER && !UNITY_EDITOR
+#if UNITY_SERVER
+            /*
             if (serverQuery != null)
             {
                 serverQuery.CurrentPlayers = (ushort)connectedCount;
                 serverQuery.MaxPlayers = (ushort)MaxPlayersToStart;
                 serverQuery.UpdateServerCheck();
-            }
+            }*/
 #endif
         }
         
