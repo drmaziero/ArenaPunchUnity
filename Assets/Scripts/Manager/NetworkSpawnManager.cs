@@ -10,13 +10,31 @@ namespace Manager
     {
         [field: SerializeField]
         private GameObject PlayerPrefab { get; set; }
+        
+        [field:Header("Game Local")]
+        [field: SerializeField]
+        private GameObject PlayerLocalPrefab { get; set; }
+        
+        [field: SerializeField]
+        private GameObject NoPlayerLocalPrefab { get; set; }
+
+        [field: SerializeField] 
+        private int TotalLocalPlayers { get; set; } = 4;
 
         private async void Awake()
         {
 #if UNITY_SERVER
              await MultiplayService.Instance.UnreadyServerAsync();
 #endif
+#if NOT_SERVER
+            for (int i = 0; i < TotalLocalPlayers; i++)
+            {
+                Transform spawnPoint = SpawnManager.Instance.GetNextSpawnPoint();
+                Instantiate(i == 0 ? PlayerLocalPrefab : NoPlayerLocalPrefab, spawnPoint.position, Quaternion.identity);
+            }
+#else
             NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnSceneLoaded;
+#endif
         }
 
         private void OnSceneLoaded(string sceneName, LoadSceneMode loadMode, List<ulong> clientsCompleted,
@@ -34,12 +52,16 @@ namespace Manager
                     Transform spawnPoint = SpawnManager.Instance.GetNextSpawnPoint();
                     if (spawnPoint != null)
                     {
-                        GameObject currentPlayer = Instantiate(PlayerPrefab, spawnPoint.position, Quaternion.identity);
+                        GameObject currentPlayer = InstantiatePlayer(spawnPoint);
                         currentPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
                     }
                 }
             }
+        }
 
+        private GameObject InstantiatePlayer(Transform spawnPoint)
+        {
+           return Instantiate(PlayerPrefab, spawnPoint.position, Quaternion.identity);
         }
     }
 }

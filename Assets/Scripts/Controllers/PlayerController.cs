@@ -39,15 +39,25 @@ namespace Controllers
         [field: SerializeField]
         private List<Transform> GlovesParent { get; set; }
 
+#if NOT_SERVER
+        public bool IsAttacking = false;
+        public bool IsHit = false;
+        public bool IsDead = false;
+        private bool IsFlipping = false;
+        private int PlayerCounter { get; set; } = 0;
+        private float PlayerCoins { get; set; } = 10.0f;
+#else
         public NetworkVariable<bool> IsAttacking = new NetworkVariable<bool>(false);
         public NetworkVariable<bool> IsHit = new NetworkVariable<bool>(false);
         public NetworkVariable<bool> IsDead = new NetworkVariable<bool>(false);
         private NetworkVariable<bool> IsFlipping = new NetworkVariable<bool>(false);
+        private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
+        private NetworkVariable<float> PlayerCoins { get; set; } = new NetworkVariable<float>(10.0f);
+#endif
         private Vector2 ServerMovementInput { get; set; }
         private Vector2 FacingDirection { get; set; }
         private Rigidbody2D Rigidbody { get;  set; }
-        private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
-        private NetworkVariable<float> PlayerCoins { get; set; } = new NetworkVariable<float>(10.0f);
+       
         private const int PlayersToEnableEscape = 2;
        
 
@@ -69,7 +79,8 @@ namespace Controllers
         public void FixedUpdate()
         {
             ApplyFlipping();
-            
+
+#if !NOT_SERVER
             if (!IsServer)
                 return;
 
@@ -78,7 +89,13 @@ namespace Controllers
                 CharacterAnimator.SetBool(IsMoving,false);
                 return;
             }
-
+#else
+            if (IsHit)
+            {
+                CharacterAnimator.SetBool(IsMoving,false);
+                return;
+            }
+#endif
             Rigidbody.velocity = ServerMovementInput * Speed;
 
             if (ServerMovementInput.sqrMagnitude > 0.00001f)
@@ -95,13 +112,19 @@ namespace Controllers
                 CharacterAnimator.SetBool(IsMoving,true);
                 if (FacingDirection.x > 0)
                 {
+#if NOT_SERVER
+                    IsFlipping = false;     
+#else
                     IsFlipping.Value = false;
-                    
+#endif
                 }
                 else if (FacingDirection.x < 0)
                 {
-                    IsFlipping.Value = true;
-                    
+#if NOT_SERVER
+                    IsFlipping = true;     
+#else
+                   IsFlipping.Value = true;
+#endif
                 }
             }
             else
@@ -110,7 +133,13 @@ namespace Controllers
 
         private void ApplyFlipping()
         {
-            if (IsFlipping.Value)
+            bool useFlipping;
+#if NOT_SERVER
+            useFlipping = IsFlipping;
+#else
+            useFlipping = IsFlipping.Value;
+#endif
+            if (useFlipping)
             {
                 CharacterSpriteRenderer.flipX = true;
                 foreach (var spriteRenderer in GloveSpriteRenderer)
@@ -147,12 +176,22 @@ namespace Controllers
             ServerMovementInput = input;
         }
 
+        public void MovementInputLocal(Vector2 input)
+        {
+            ServerMovementInput = input;
+        }
+
         [ServerRpc]
         public void SendAttackServerRpc(Vector3 direction)
         {
             if (!IsServer)
                 return;
 
+            HandleAttack(direction);
+        }
+
+        public void HandleAttack(Vector3 direction)
+        {
             if (!CanAttack)
                 return;
 
@@ -164,11 +203,18 @@ namespace Controllers
         private IEnumerator PerformAttack()
         {
             CanAttack = false;
+#if NOT_SERVER
+            IsAttacking = true;
+#else
             IsAttacking.Value = true;
-
+#endif
             GloveAnimator.Play("Attack");
             yield return new WaitForSeconds(AttackDuration);
-            IsAttacking.Value = false;
+#if NOT_SERVER
+            IsAttacking = false;
+#else
+             IsAttacking.Value = false;
+#endif
             yield return new WaitForSeconds(AttackCooldown);
             CanAttack = true;
         }
@@ -182,20 +228,30 @@ namespace Controllers
 
         public void GetHit()
         {
+#if NOT_SERVER
+            if (IsHit)
+                return;
+#else
             if (IsHit.Value)
                 return;
-
+#endif
             StartCoroutine(PerformHit());
         }
 
         private IEnumerator PerformHit()
         {
+#if NOT_SERVER
+            IsHit = true;
+            yield return new WaitForSeconds(0.5f);
+            IsHit = false;
+#else
             IsHit.Value = true;
-            //CharacterAnimator.Play("GetHit");
             yield return new WaitForSeconds(0.5f);
             IsHit.Value = false;
+#endif
         }
 
+        /*
         public void Death()
         {
             if (IsDead.Value)
@@ -204,5 +260,6 @@ namespace Controllers
             IsDead.Value = true;
             CharacterAnimator.Play("Death");
         }
+        */
     }
 }

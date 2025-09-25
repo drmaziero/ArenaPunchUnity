@@ -9,17 +9,24 @@ namespace Controllers
     {
         private void OnCollisionEnter2D(Collision2D other)
         {
+#if !NOT_SERVER
             if (!IsServer)
                 return;
+#endif
 
             if (other.collider.CompareTag("RingLimit"))
             {
+#if !NOT_SERVER
                 ulong ownerClientId = OwnerClientId;
                 ShowGameOverClientRpc(new ClientRpcParams()
                 {
                     Send = new ClientRpcSendParams() { TargetClientIds = new[] { ownerClientId } }
                 });
                 NetworkObject.Despawn(true);
+#else
+                Destroy(this.gameObject);
+                GameOverUI.Instance.Show();
+#endif
             }
         }
 

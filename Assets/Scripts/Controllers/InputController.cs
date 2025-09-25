@@ -16,6 +16,9 @@ namespace Controllers
         [field: SerializeField]
         private InputActionAsset PlayerInputActions { get; set; }
 
+        [field: SerializeField] 
+        private bool DisableInputs { get; set; } = false;
+
         private InputAction MoveAction { get; set; }
         private InputAction AttackAction { get; set; }
         private Vector3 LastNonZeroDirection { get; set; }
@@ -56,25 +59,35 @@ namespace Controllers
 
         private void Update()
         {
-            if (!IsOwner || !IsClient)
+#if !NOT_SERVER
+             if (!IsOwner || !IsClient)
                 return;
-
+#endif
+            
             if (AttackAction != null && AttackAction.WasPressedThisFrame())
             {
                 Vector3 attackDirection = LastNonZeroDirection.sqrMagnitude > 0.0001f
                     ? LastNonZeroDirection.normalized
                     : transform.forward;
                 
-                PlayerController.SendAttackServerRpc(attackDirection);
+                #if NOT_SERVER
+                    if (DisableInputs)
+                        return;
+                
+                    PlayerController.HandleAttack(attackDirection);
+                #else
+                    PlayerController.SendAttackServerRpc(attackDirection);
+                #endif
             }
         }
 
 
         private void FixedUpdate()
         {
+#if !NOT_SERVER
             if (!IsOwner || !IsClient)
                 return;
-
+#endif
             if (MoveAction == null)
                 return;
 
@@ -86,7 +99,14 @@ namespace Controllers
                 LastNonZeroDirection = direction.normalized;
             }
             
-            PlayerController.SendMovementInputServerRpc(direction);
+            #if NOT_SERVER
+                if (DisableInputs)
+                    return;
+                
+                PlayerController.MovementInputLocal(direction);
+            #else
+                PlayerController.SendMovementInputServerRpc(direction);
+            #endif
         }
     }
 }

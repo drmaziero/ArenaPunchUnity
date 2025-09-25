@@ -31,11 +31,12 @@ namespace Manager
 
        public void LeaveGame()
        {
+#if !NOT_SERVER
            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsClient)
            {
                NetworkManager.Singleton.Shutdown();
            }
-
+#endif
            GoToLobbyScene();
        }
 

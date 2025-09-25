@@ -11,21 +11,31 @@ namespace Controllers
 
         private void OnTriggerStay2D(Collider2D other)
         {
+#if !NOT_SERVER
             if (!NetworkManager.Singleton.IsServer)
                 return;
-            
+#endif
             if (other.gameObject == Owner.gameObject)
                 return;
             
             if (other.TryGetComponent<GloveController>(out var enemyGlover))
             {
                 PlayerController enemy = enemyGlover.GetPlayerController();
+#if !NOT_SERVER
                 if (enemy.IsAttacking.Value)
                 {
                     Vector2 pushDirection = (transform.position - enemy.transform.position).normalized;
                     Owner.ApplyPush(pushDirection);
                     Owner.GetHit();
                 }
+#else
+                if (enemy.IsAttacking)
+                {
+                    Vector2 pushDirection = (transform.position - enemy.transform.position).normalized;
+                    Owner.ApplyPush(pushDirection);
+                    Owner.GetHit();
+                }
+#endif
             }
         }
     }
