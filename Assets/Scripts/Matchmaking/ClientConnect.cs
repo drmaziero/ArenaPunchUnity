@@ -52,14 +52,17 @@ namespace Matchmaking
         {
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
             var ticketResponse = await MatchmakerService.Instance.CreateTicketAsync(players, options);
+            Debug.Log($"[Client] Ticket created: ID={ticketResponse.Id}, Queue={options.QueueName}");
             
             while (true)
             {
                 await Task.Delay(TimeSpan.FromSeconds(1));
                 var ticketStatusResponse = await MatchmakerService.Instance.GetTicketAsync(ticketResponse.Id);
-
+                
+                Debug.Log($"[Client] Ticket {ticketResponse.Id} status:{ticketStatusResponse?.Type}, Value: {ticketStatusResponse?.Value}");
                 if (ticketStatusResponse?.Value is MultiplayAssignment assignment)
                 {
+                    Debug.Log($"[Client] Assignment: Status: {assignment.Status}, IP: {assignment.Ip}, Port={assignment.Port}");
                     switch (assignment.Status)
                     {
                         case MultiplayAssignment.StatusOptions.Found:

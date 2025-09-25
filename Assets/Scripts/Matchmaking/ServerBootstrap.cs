@@ -25,7 +25,7 @@ namespace Matchmaking
         [field: SerializeField] 
         private int MaxPlayersToStart { get; set; } = 8;
 
-        private IServerQueryHandler serverQuery;
+        //private IServerQueryHandler serverQuery;
         private int connectedCount;
         private string ticketId;
 
@@ -59,8 +59,8 @@ namespace Matchmaking
             NetworkManager.Singleton.OnServerStopped += b => { Debug.Log("Server Stopped"); };
             Debug.Log($"Starter Server {unityTransport.ConnectionData.Address}:{unityTransport.ConnectionData.Port}");
 
-            serverQuery = await MultiplayService.Instance.StartServerQueryHandlerAsync((ushort)MaxPlayersToStart,
-                "ArenaPunch", "All", Application.version, GameManager.SceneNames.Server.ToString());
+            //serverQuery = await MultiplayService.Instance.StartServerQueryHandlerAsync((ushort)MaxPlayersToStart,
+            //    "ArenaPunch", "All", Application.version, GameManager.SceneNames.Server.ToString());
 
             var callbacks = new MultiplayEventCallbacks();
             callbacks.Allocate += OnAllocate;
@@ -163,7 +163,7 @@ namespace Matchmaking
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
             }
 
-            serverQuery?.Dispose();
+            //serverQuery?.Dispose();
         }
 
         private void OnClientConnected(ulong clientId)
