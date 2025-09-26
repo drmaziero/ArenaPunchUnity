@@ -63,6 +63,7 @@ namespace Controllers
             if (attackPlayerController != null)
                 attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
 #else
+            Debug.Log($"Eliminate Player by: {gameObject.GetComponent<PlayerController>().AttackPlayerId}");
             GameManager.Instance.Unregister(gameObject.GetComponent<PlayerController>().MyPlayerId);
             Destroy(this.gameObject);
             if (this.GetComponent<PlayerController>().IsNotServerLocalPlayer)
@@ -72,7 +73,7 @@ namespace Controllers
             else
                 GameManager.Instance.NotifyPlayerElimination();
             
-            var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(gameObject.GetComponent<PlayerController>().MyPlayerId);
+            var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(gameObject.GetComponent<PlayerController>().AttackPlayerId);
             if (attackPlayerController != null)
                 attackPlayerController.AddCoinsLocal(GetComponent<PlayerController>().GetHalfCoins());
 #endif

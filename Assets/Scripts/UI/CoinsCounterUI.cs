@@ -33,14 +33,16 @@ namespace UI
 
         public void UpdateAddCoinsAmount(int coinsAmount)
         {
-            StopCoroutine(ShowCoinsAmountCoroutine); 
+            if (ShowCoinsAmountCoroutine != null)
+                StopCoroutine(ShowCoinsAmountCoroutine); 
+            
             ShowCoinsAmountCoroutine = StartCoroutine(ShowAddCoins(coinsAmount));
         }
 
         private IEnumerator ShowAddCoins(int coinsAmount)
         {
             AddCoinsAmount.text = $"{coinsAmount},00";
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(1.5f);
             AddCoinsAmount.text = "";
         }
 

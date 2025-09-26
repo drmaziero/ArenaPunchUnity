@@ -355,6 +355,7 @@ namespace Controllers
 
         public void AddCoinsLocal(int amountCoins)
         {
+            Debug.Log($"Add Coins Local: {amountCoins}");
             Coins += amountCoins;
             CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
             CoinsCounterUI.Instance.UpdateAddCoinsAmount(amountCoins);
