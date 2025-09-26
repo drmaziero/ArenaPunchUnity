@@ -157,6 +157,7 @@ MonoBehaviour:
   <Speed>k__BackingField: 5
   <AttackDuration>k__BackingField: 0.5
   <AttackCooldown>k__BackingField: 0.5
+  <AttackVFXDuration>k__BackingField: 0.3
   <PushForce>k__BackingField: 10
   <CharacterAnimator>k__BackingField: {fileID: 4724952570913016284}
   <CharacterSpriteRenderer>k__BackingField: {fileID: 7221607405709534538}
@@ -164,15 +165,14 @@ MonoBehaviour:
   <GloveSpriteRenderer>k__BackingField:
   - {fileID: 5321834801238392886}
   - {fileID: 658065177839606941}
+  <HitVFXSpriteRender>k__BackingField: {fileID: 3096969902192836244}
   <GlovesParent>k__BackingField:
   - {fileID: 8899728280727586612}
   - {fileID: 1338555545370290327}
-  IsAttacking:
-    m_InternalValue: 0
-  IsHit:
-    m_InternalValue: 0
-  IsDead:
-    m_InternalValue: 0
+  <IsNotServerLocalPlayer>k__BackingField: 1
+  IsAttacking: 0
+  IsHit: 0
+  IsDead: 0
 --- !u!114 &9158578966799286372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -217,6 +217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <PlayerInputActions>k__BackingField: {fileID: -944628639613478452, guid: 51c76bde44a4b496f93d143848d19186, type: 3}
+  <DisableInputs>k__BackingField: 0
 --- !u!210 &5977179096652803680
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -544,6 +545,90 @@ MonoBehaviour:
   InLocalSpace: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!1 &2434262030858659281
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6354483263334114302}
+  - component: {fileID: 3096969902192836244}
+  m_Layer: 0
+  m_Name: hitVFX
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &6354483263334114302
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2434262030858659281}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.5029999, y: -0.0729, z: 0}
+  m_LocalScale: {x: 0.30934066, y: 0.30543616, z: 0.35092974}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8395171983821511445}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &3096969902192836244
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2434262030858659281}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: -102210317
+  m_SortingLayer: 2
+  m_SortingOrder: 3
+  m_Sprite: {fileID: 21300000, guid: 3567e94b9edcc4a11a1bea4716615862, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 1
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 5.12, y: 5.12}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
 --- !u!1 &3881719707695084799
 GameObject:
   m_ObjectHideFlags: 0
@@ -789,7 +874,8 @@ Transform:
   m_LocalPosition: {x: 0.33, y: -0.09, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 6354483263334114302}
   m_Father: {fileID: 8899728280727586612}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5321834801238392886

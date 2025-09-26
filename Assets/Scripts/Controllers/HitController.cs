@@ -34,6 +34,7 @@ namespace Controllers
                     Vector2 pushDirection = (transform.position - enemy.transform.position).normalized;
                     Owner.ApplyPush(pushDirection);
                     Owner.GetHit();
+                    enemy.ApplyHitVFX();
                 }
 #endif
             }

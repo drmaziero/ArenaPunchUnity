@@ -23,7 +23,12 @@ namespace UI
                 Destroy(gameObject);
         }
 
-        public void Show() => this.gameObject.SetActive(true);
+        public void Show()
+        {
+            PlayerCounterUI.Instance.Disable();
+            gameObject.SetActive(true);
+        }
+
         public void Hide() => this.gameObject.SetActive(false);
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Manager;
 using UI;
 using Unity.Netcode;
 using UnityEngine;
@@ -25,7 +26,12 @@ namespace Controllers
                 NetworkObject.Despawn(true);
 #else
                 Destroy(this.gameObject);
-                GameOverUI.Instance.Show();
+                if (this.GetComponent<PlayerController>().IsNotServerLocalPlayer)
+                {
+                    GameOverUI.Instance.Show();
+                }
+                else
+                    GameManager.Instance.NotifyPlayerElimination();
 #endif
             }
         }
@@ -33,8 +39,13 @@ namespace Controllers
         [ClientRpc]
         private void ShowGameOverClientRpc(ClientRpcParams rpcParams = default)
         {
-            Debug.LogWarning("Show Game Over UI");
-            GameOverUI.Instance.Show();
+            if (IsOwner)
+            {
+                Debug.LogWarning("Show Game Over UI");
+                GameOverUI.Instance.Show();
+            }
+            else
+                GameManager.Instance.NotifyPlayerElimination();
         }
     }
 }

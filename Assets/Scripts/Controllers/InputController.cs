@@ -73,7 +73,7 @@ namespace Controllers
                 #if NOT_SERVER
                     if (DisableInputs)
                         return;
-                
+                    
                     PlayerController.HandleAttack(attackDirection);
                 #else
                     PlayerController.SendAttackServerRpc(attackDirection);

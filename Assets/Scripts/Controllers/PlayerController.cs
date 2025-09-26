@@ -24,6 +24,9 @@ namespace Controllers
         private float AttackCooldown { get; set; } = 1.0f;
 
         [field: SerializeField] 
+        private float AttackVFXDuration { get; set; } = 0.3f;
+
+        [field: SerializeField] 
         private float PushForce { get; set; } = 10.0f;
         [field: SerializeField]
         private Animator CharacterAnimator { get; set; }
@@ -37,7 +40,14 @@ namespace Controllers
         private List<SpriteRenderer> GloveSpriteRenderer { get; set; }
         
         [field: SerializeField]
+        private SpriteRenderer HitVFXSpriteRender { get; set; }
+        
+        [field: SerializeField]
         private List<Transform> GlovesParent { get; set; }
+
+        [field: Header("Local Player")]
+        [field: SerializeField]
+        public bool IsNotServerLocalPlayer { get; private set; } = false;
 
 #if NOT_SERVER
         public bool IsAttacking = false;
@@ -73,7 +83,6 @@ namespace Controllers
 
             CanAttack = true;
             Rigidbody = GetComponent<Rigidbody2D>();
-            //PlayerCounterUI.Instance.UpdateCounter(PlayersToEnableEscape - PlayerCounter.Value);
         }
 
         public void FixedUpdate()
@@ -147,6 +156,8 @@ namespace Controllers
                     spriteRenderer.flipX = true;
                 }
 
+                HitVFXSpriteRender.flipX = false;
+
                 GlovesParent[0].localPosition = new Vector3(-0.6f, 0.0f, 0.0f);
                 GlovesParent[1].localPosition = new Vector3(-1.2f, 0.0f, 0.0f);
             }
@@ -157,6 +168,8 @@ namespace Controllers
                 {
                     spriteRenderer.flipX = false;
                 }
+                
+                HitVFXSpriteRender.flipX = true;
                     
                 foreach (var gloveTransform in GlovesParent)
                 {
@@ -223,7 +236,7 @@ namespace Controllers
         
         public void ApplyPush(Vector2 direction)
         {
-            Rigidbody.AddForce(direction * PushForce, ForceMode2D.Impulse);
+            Rigidbody.AddForce(direction.normalized * PushForce, ForceMode2D.Impulse);
         }
 
         public void GetHit()
@@ -250,6 +263,19 @@ namespace Controllers
             IsHit.Value = false;
 #endif
         }
+
+        public void ApplyHitVFX()
+        {
+            StartCoroutine(PeformHitVFX());
+        }
+
+        private IEnumerator PeformHitVFX()
+        {
+            HitVFXSpriteRender.gameObject.SetActive(true);
+            yield return new WaitForSeconds(AttackVFXDuration);
+            HitVFXSpriteRender.gameObject.SetActive(false);
+        }
+        
 
         /*
         public void Death()

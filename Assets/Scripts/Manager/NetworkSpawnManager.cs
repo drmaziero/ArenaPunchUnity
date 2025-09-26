@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Services.Multiplay;
 using UnityEngine;
@@ -32,6 +34,9 @@ namespace Manager
                 Transform spawnPoint = SpawnManager.Instance.GetNextSpawnPoint();
                 Instantiate(i == 0 ? PlayerLocalPrefab : NoPlayerLocalPrefab, spawnPoint.position, Quaternion.identity);
             }
+
+            await Task.Delay(TimeSpan.FromSeconds(1.0f));
+            GameManager.Instance.NotifyPlayerElimination(true);
 #else
             NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnSceneLoaded;
 #endif
@@ -56,6 +61,7 @@ namespace Manager
                         currentPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
                     }
                 }
+                GameManager.Instance.NotifyPlayerElimination(true);
             }
         }
 

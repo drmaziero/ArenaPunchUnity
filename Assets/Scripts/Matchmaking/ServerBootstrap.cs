@@ -208,7 +208,6 @@ namespace Matchmaking
         private async void OnDeallocate(MultiplayDeallocation obj)
         {
            Debug.Log($"Deallocation received: {obj}");
-           await MultiplayService.Instance.UnreadyServerAsync();
         }
 
         private async void OnAllocate(MultiplayAllocation obj)

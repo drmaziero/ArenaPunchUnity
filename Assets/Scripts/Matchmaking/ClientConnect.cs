@@ -97,7 +97,6 @@ namespace Matchmaking
             
             if (ticketStatusResponse?.Value is MultiplayAssignment assignment)
             {
-                Debug.Log($"[Client] Assignment: Status: {assignment.Status}, IP: {assignment.Ip}, Port={assignment.Port}");
                 switch (assignment.Status)
                 {
                     case MultiplayAssignment.StatusOptions.Found:

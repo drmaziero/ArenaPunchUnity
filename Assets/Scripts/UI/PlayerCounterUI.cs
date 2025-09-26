@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -8,22 +9,36 @@ namespace UI
     {
         [field: SerializeField]
         private TextMeshProUGUI CounterLabel { get; set; }
+        [field: SerializeField]
+        private Button EscapeButton { get; set; }
+        
         public static PlayerCounterUI Instance;
-        private int TotalCounter { get; set; }
         
         public void Awake()
         {
-            TotalCounter = 0;
             if (Instance == null)
                 Instance = this;
             else
                 Destroy(gameObject);
-            Show();
+            
+            EscapeButton.onClick.AddListener(()=>
+            {
+                GameOverUI.Instance.Show();
+                EscapeButton.gameObject.SetActive(false);
+            });
+
+#if UNITY_SERVER
+          Hide();  
+#endif
         }
 
         private void Show() => gameObject.SetActive(true);
 
-        private void Hide() => gameObject.SetActive(false);
+        private void Hide()
+        {
+            EscapeButton.gameObject.SetActive(true);
+            gameObject.SetActive(false);
+        }
 
         public void UpdateCounter(int counter)
         {
@@ -31,11 +46,16 @@ namespace UI
                 return;
             
             CounterLabel.text = $"{counter} To Escape";
-            if (TotalCounter > 0)
+            if (counter > 0)
                 Show();
             else
                 Hide();
-            
+        }
+
+        public void Disable()
+        {
+            Hide();
+            EscapeButton.gameObject.SetActive(false);
         }
     }
 }
