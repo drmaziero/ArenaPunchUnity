@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -7,6 +8,11 @@ namespace Controllers
     {
         [field: SerializeField]
         private ObstacleController PuncherController { get; set; }
+        [field: SerializeField] 
+        private float AttackVFXDuration { get; set; } = 0.3f;
+        [field: SerializeField]
+        private SpriteRenderer HitVFXSpriteRender { get; set; }
+        
         private void OnTriggerStay2D(Collider2D other)
         {
 #if !NOT_SERVER
@@ -33,7 +39,20 @@ namespace Controllers
 #endif
                 enemy.ApplyPush(direction);
                 enemy.GetHit();
+                ApplyHitVFX();
             }
+        }
+        
+        private void ApplyHitVFX()
+        {
+            StartCoroutine(PerformHitVFX());
+        }
+
+        private IEnumerator PerformHitVFX()
+        {
+            HitVFXSpriteRender.gameObject.SetActive(true);
+            yield return new WaitForSeconds(AttackVFXDuration);
+            HitVFXSpriteRender.gameObject.SetActive(false);
         }
     }
 }

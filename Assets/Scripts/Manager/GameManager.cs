@@ -76,11 +76,13 @@ namespace Manager
 
        private async void OnApplicationQuit()
        {
+#if UNITY_SERVER
            if (NetworkManager.Singleton.IsServer)
            {
                NetworkManager.Singleton.Shutdown();
                await MultiplayService.Instance.UnreadyServerAsync();
            }
+#endif
        }
 
        public void NotifyPlayerElimination(bool notUpdate = false)
