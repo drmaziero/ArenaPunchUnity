@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Manager;
 using UI;
 using Unity.Netcode;
@@ -8,6 +9,12 @@ namespace Controllers
 {
     public class EliminationCollisionController : NetworkBehaviour
     {
+#if NOT_SERVER
+        private bool IsEliminated = false;
+#else
+        private NetworkVariable<bool> IsEliminated = new NetworkVariable<bool>(false);
+#endif
+        
         private void OnCollisionEnter2D(Collision2D other)
         {
 #if !NOT_SERVER
@@ -17,21 +24,12 @@ namespace Controllers
 
             if (other.collider.CompareTag("RingLimit"))
             {
-#if !NOT_SERVER
-                ulong ownerClientId = OwnerClientId;
-                ShowGameOverClientRpc(new ClientRpcParams()
-                {
-                    Send = new ClientRpcSendParams() { TargetClientIds = new[] { ownerClientId } }
-                });
-                NetworkObject.Despawn(true);
+#if NOT_SERVER
+                if (!IsEliminated)
+                    StartCoroutine(StartingElimination());
 #else
-                Destroy(this.gameObject);
-                if (this.GetComponent<PlayerController>().IsNotServerLocalPlayer)
-                {
-                    GameOverUI.Instance.Show();
-                }
-                else
-                    GameManager.Instance.NotifyPlayerElimination();
+                if (!IsEliminated.Value)
+                    StartCoroutine(StartingElimination());
 #endif
             }
         }
@@ -46,6 +44,39 @@ namespace Controllers
             }
             else
                 GameManager.Instance.NotifyPlayerElimination();
+        }
+
+        private IEnumerator StartingElimination()
+        {
+#if NOT_SERVER
+            IsEliminated = true;
+#else
+            IsEliminated.Value = true;
+#endif
+            this.gameObject.GetComponent<PlayerController>().Eliminate();
+            yield return new WaitForSeconds(0.25f);
+#if !NOT_SERVER
+                ulong ownerClientId = OwnerClientId;
+                ShowGameOverClientRpc(new ClientRpcParams()
+                {
+                    Send = new ClientRpcSendParams() { TargetClientIds = new[] { ownerClientId } }
+                });
+                NetworkObject.Despawn(true);
+#else
+            Destroy(this.gameObject);
+            if (this.GetComponent<PlayerController>().IsNotServerLocalPlayer)
+            {
+                GameOverUI.Instance.Show();
+            }
+            else
+                GameManager.Instance.NotifyPlayerElimination();
+#endif
+#if NOT_SERVER
+            IsEliminated = false;
+#else
+            IsEliminated.Value = false;
+#endif
+            
         }
     }
 }

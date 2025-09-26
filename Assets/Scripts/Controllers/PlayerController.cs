@@ -25,6 +25,8 @@ namespace Controllers
 
         [field: SerializeField] 
         private float AttackVFXDuration { get; set; } = 0.3f;
+        [field: SerializeField] 
+        private float EliminateVFXDuration { get; set; } = 0.3f;
 
         [field: SerializeField] 
         private float PushForce { get; set; } = 10.0f;
@@ -44,6 +46,12 @@ namespace Controllers
         
         [field: SerializeField]
         private List<Transform> GlovesParent { get; set; }
+        
+        [field: SerializeField]
+        private GameObject LocalPlayerMarked { get; set; }
+        
+        [field: SerializeField]
+        private SpriteRenderer EliminationVFXSpriteRenderer { get; set; }
 
         [field: Header("Local Player")]
         [field: SerializeField]
@@ -83,6 +91,14 @@ namespace Controllers
 
             CanAttack = true;
             Rigidbody = GetComponent<Rigidbody2D>();
+            
+#if NOT_SERVER
+            if (IsNotServerLocalPlayer)
+                LocalPlayerMarked.SetActive(true);
+#else
+            if (IsLocalPlayer)
+                LocalPlayerMarked.SetActive(true);
+#endif
         }
 
         public void FixedUpdate()
@@ -157,6 +173,7 @@ namespace Controllers
                 }
 
                 HitVFXSpriteRender.flipX = false;
+                EliminationVFXSpriteRenderer.flipX = true;
 
                 GlovesParent[0].localPosition = new Vector3(-0.6f, 0.0f, 0.0f);
                 GlovesParent[1].localPosition = new Vector3(-1.2f, 0.0f, 0.0f);
@@ -170,6 +187,7 @@ namespace Controllers
                 }
                 
                 HitVFXSpriteRender.flipX = true;
+                EliminationVFXSpriteRenderer.flipX = false;
                     
                 foreach (var gloveTransform in GlovesParent)
                 {
@@ -266,26 +284,28 @@ namespace Controllers
 
         public void ApplyHitVFX()
         {
-            StartCoroutine(PeformHitVFX());
+            StartCoroutine(PerformHitVFX());
         }
 
-        private IEnumerator PeformHitVFX()
+        private IEnumerator PerformHitVFX()
         {
             HitVFXSpriteRender.gameObject.SetActive(true);
             yield return new WaitForSeconds(AttackVFXDuration);
             HitVFXSpriteRender.gameObject.SetActive(false);
         }
-        
 
-        /*
-        public void Death()
+
+        public void Eliminate()
         {
-            if (IsDead.Value)
-                return;
-
-            IsDead.Value = true;
-            CharacterAnimator.Play("Death");
+            StartCoroutine(PerformEliminate());
         }
-        */
+
+        private IEnumerator PerformEliminate()
+        {
+            EliminationVFXSpriteRenderer.gameObject.SetActive(true);
+            yield return new WaitForSeconds(EliminateVFXDuration);
+            EliminationVFXSpriteRenderer.gameObject.SetActive(false);
+        }
+        
     }
 }
