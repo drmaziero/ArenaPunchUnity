@@ -378,7 +378,7 @@ namespace Controllers
         
         public int GetHalfCoins()
         {
-#if UNITY_SERVER
+#if !NOT_SERVER
             return Mathf.FloorToInt(Coins.Value / 2);
 #else
            return Mathf.FloorToInt(Coins / 2);
