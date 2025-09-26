@@ -1,6 +1,7 @@
 using System;
 using UI;
 using Unity.Netcode;
+using Unity.Services.Authentication;
 using Unity.Services.Multiplay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -25,7 +26,7 @@ namespace Manager
 #if NOT_SERVER
         private int TotalPlayersEliminated { get; set; } = 0; 
 #else
-        private NetworkVariable<int> TotalPlayersEliminated { get; set; } = new NetworkVariable<int>(0);
+        private NetworkVariable<EliminateCountData> TotalPlayersEliminated { get; set; } = new NetworkVariable<EliminateCountData>();
 #endif
 
        private void Awake()
@@ -46,7 +47,8 @@ namespace Manager
 #if NOT_SERVER
            TotalPlayersEliminated = 0; 
 #else
-            TotalPlayersEliminated.Value = new NetworkVariable<int>(0);
+           TotalPlayersEliminated.Value = new EliminateCountData()
+               { PlayerId = AuthenticationService.Instance.PlayerId, TotalPlayersEliminated = 0 };
 #endif
        }
 
@@ -85,7 +87,7 @@ namespace Manager
 #endif
        }
 
-       public void NotifyPlayerElimination(bool notUpdate = false)
+       public void NotifyPlayerElimination(bool notUpdate = false, string playerID = "")
        {
         #if NOT_SERVER
            if (!notUpdate) 
@@ -93,9 +95,23 @@ namespace Manager
            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated);
         #else
             if (!notUpdate) 
-                TotalPlayersEliminated.Value++;
-            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated.Value);
+                return;
+            
+            if (playerID != AuthenticationService.Instance.PlayerId)
+                return;
+
+            var newEliminatedData = TotalPlayersEliminated.Value;
+            newEliminatedData.TotalPlayersEliminated++;
+            TotalPlayersEliminated.Value = newEliminatedData;
+            
+            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated.Value.TotalPlayersEliminated);
         #endif
+       }
+
+       public struct EliminateCountData
+       {
+           public string PlayerId { get; set; }
+           public int TotalPlayersEliminated { get; set; }
        }
     }
 }

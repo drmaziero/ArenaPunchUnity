@@ -35,7 +35,7 @@ namespace Controllers
         }
 
         [ClientRpc]
-        private void ShowGameOverClientRpc(ClientRpcParams rpcParams = default)
+        private void ShowGameOverClientRpc(string notifyPlayerId)
         {
             if (IsOwner)
             {
@@ -43,7 +43,7 @@ namespace Controllers
                 GameOverUI.Instance.Show();
             }
             else
-                GameManager.Instance.NotifyPlayerElimination();
+                GameManager.Instance.NotifyPlayerElimination(false,notifyPlayerId);
         }
 
         private IEnumerator StartingElimination()
@@ -56,12 +56,9 @@ namespace Controllers
             this.gameObject.GetComponent<PlayerController>().Eliminate();
             yield return new WaitForSeconds(0.25f);
 #if !NOT_SERVER
-                ulong ownerClientId = OwnerClientId;
-                ShowGameOverClientRpc(new ClientRpcParams()
-                {
-                    Send = new ClientRpcSendParams() { TargetClientIds = new[] { ownerClientId } }
-                });
-                NetworkObject.Despawn(true);
+            string attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value;
+            ShowGameOverClientRpc(attackerPlayerID);
+            NetworkObject.Despawn(true);
 #else
             Destroy(this.gameObject);
             if (this.GetComponent<PlayerController>().IsNotServerLocalPlayer)

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using UI;
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.Services.Authentication;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -71,6 +72,7 @@ namespace Controllers
         private NetworkVariable<bool> IsFlipping = new NetworkVariable<bool>(false);
         private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
         private NetworkVariable<float> PlayerCoins { get; set; } = new NetworkVariable<float>(10.0f);
+        public NetworkVariable<string> AttackPlayerId { get; private set; } = new NetworkVariable<string>();
 #endif
         private Vector2 ServerMovementInput { get; set; }
         private Vector2 FacingDirection { get; set; }
@@ -257,7 +259,7 @@ namespace Controllers
             Rigidbody.AddForce(direction.normalized * PushForce, ForceMode2D.Impulse);
         }
 
-        public void GetHit()
+        public void GetHit(string attackPlayerID = "")
         {
 #if NOT_SERVER
             if (IsHit)
@@ -265,6 +267,8 @@ namespace Controllers
 #else
             if (IsHit.Value)
                 return;
+
+            AttackPlayerId.Value = attackPlayerID;
 #endif
             StartCoroutine(PerformHit());
         }
@@ -279,6 +283,7 @@ namespace Controllers
             IsHit.Value = true;
             yield return new WaitForSeconds(0.5f);
             IsHit.Value = false;
+            AttackPlayerId.Value = string.Empty;
 #endif
         }
 
@@ -305,6 +310,11 @@ namespace Controllers
             EliminationVFXSpriteRenderer.gameObject.SetActive(true);
             yield return new WaitForSeconds(EliminateVFXDuration);
             EliminationVFXSpriteRenderer.gameObject.SetActive(false);
+        }
+
+        public string GetPlayerId()
+        {
+            return AuthenticationService.Instance.PlayerId;
         }
         
     }
