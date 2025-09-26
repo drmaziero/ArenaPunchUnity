@@ -97,6 +97,7 @@ namespace Manager
            if (!notUpdate) 
                TotalPlayersEliminated++;
            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated);
+           EndGameUI.Instance.UpdatePlayerEliminated(TotalPlayersEliminated);
         #else
             if (!notUpdate) 
                 return;
@@ -109,6 +110,7 @@ namespace Manager
             TotalPlayersEliminated.Value = newEliminatedData;
             
             PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated.Value.TotalPlayersEliminated);
+            EndGameUI.Instance.UpdatePlayerEliminated(TotalPlayersEliminated.Value.TotalPlayersEliminated);
         #endif
        }
 
@@ -125,6 +127,9 @@ namespace Manager
 
        public PlayerController GetPlayerControllerByAuthId(string playerId)
        {
+           if (string.IsNullOrEmpty(playerId))
+               return null;
+           
            if (!PlayersByAuthId.ContainsKey(playerId))
                return null;
            

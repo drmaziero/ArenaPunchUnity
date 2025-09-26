@@ -23,7 +23,7 @@ namespace UI
             
             EscapeButton.onClick.AddListener(()=>
             {
-                GameOverUI.Instance.Show();
+                EndGameUI.Instance.Show();
                 EscapeButton.gameObject.SetActive(false);
             });
 

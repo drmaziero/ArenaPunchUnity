@@ -64,8 +64,8 @@ namespace Controllers
         public bool IsHit = false;
         public bool IsDead = false;
         private bool IsFlipping = false;
-        private int PlayerCounter { get; set; } = 0;
-        private int Coins {get; set; } = 10;
+        public int PlayerCounter { get; private set; } = 0;
+        public int Coins { get; private set; } = 10;
         public string MyPlayerId { get; set; }
         public string AttackPlayerId { get; set; }
 #else
@@ -82,8 +82,7 @@ namespace Controllers
         private Rigidbody2D Rigidbody { get;  set; }
        
         private const int PlayersToEnableEscape = 2;
-       
-
+        
         private const string IsMoving = "IsMoving";
        
        private bool CanAttack { get; set; }
@@ -355,10 +354,13 @@ namespace Controllers
 
         public void AddCoinsLocal(int amountCoins)
         {
+#if NOT_SERVER
             Debug.Log($"Add Coins Local: {amountCoins}");
             Coins += amountCoins;
             CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
             CoinsCounterUI.Instance.UpdateAddCoinsAmount(amountCoins);
+            EndGameUI.Instance.UpdateCoins(Coins);
+#endif
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -369,6 +371,7 @@ namespace Controllers
             if (target != null)
             {
                 target.Coins.Value += amountCoins;
+                EndGameUI.Instance.UpdateCoins(target.Coins.Value);
             }
 #endif
         }

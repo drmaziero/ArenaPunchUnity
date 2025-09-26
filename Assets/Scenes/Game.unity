@@ -933,7 +933,7 @@ GameObject:
   - component: {fileID: 386329979}
   - component: {fileID: 386329978}
   m_Layer: 5
-  m_Name: GameOver
+  m_Name: EndGame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -976,6 +976,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <HomeButton>k__BackingField: {fileID: 1637176105}
+  <PlayerEliminated>k__BackingField: {fileID: 992706627}
+  <Coins>k__BackingField: {fileID: 1623150680}
 --- !u!114 &386329979
 MonoBehaviour:
   m_ObjectHideFlags: 0

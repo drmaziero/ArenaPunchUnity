@@ -1,17 +1,24 @@
 using System;
 using Manager;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace UI
 {
-    public class GameOverUI : MonoBehaviour
+    public class EndGameUI : MonoBehaviour
     {
         [field: SerializeField]
         private Button HomeButton { get; set; }
         
-        public static GameOverUI Instance;
+        [field: SerializeField]
+        private TextMeshProUGUI PlayerEliminated { get; set; }
+        
+        [field: SerializeField]
+        private TextMeshProUGUI Coins { get; set; }
+        
+        public static EndGameUI Instance;
 
         public void Awake()
         {
@@ -28,6 +35,9 @@ namespace UI
             PlayerCounterUI.Instance.Disable();
             gameObject.SetActive(true);
         }
+        
+        public void UpdatePlayerEliminated(int eliminatedAmount) =>  PlayerEliminated.text = $"{eliminatedAmount}";
+        public void UpdateCoins(int coins) => Coins.text = $"{coins}";
 
         public void Hide() => this.gameObject.SetActive(false);
     }

@@ -37,13 +37,15 @@ namespace Controllers
         [ClientRpc]
         private void ShowGameOverClientRpc(string notifyPlayerId)
         {
+#if !NOT_SERVER
             if (IsOwner)
             {
                 Debug.LogWarning("Show Game Over UI");
-                GameOverUI.Instance.Show();
+                EndGameUI.Instance.Show();
             }
             else
                 GameManager.Instance.NotifyPlayerElimination(false,notifyPlayerId);
+#endif
         }
 
         private IEnumerator StartingElimination()
@@ -68,7 +70,7 @@ namespace Controllers
             Destroy(this.gameObject);
             if (this.GetComponent<PlayerController>().IsNotServerLocalPlayer)
             {
-                GameOverUI.Instance.Show();
+                EndGameUI.Instance.Show();
             }
             else
                 GameManager.Instance.NotifyPlayerElimination();
