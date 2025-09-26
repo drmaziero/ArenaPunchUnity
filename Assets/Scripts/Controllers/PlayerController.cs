@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Manager;
 using UI;
 using Unity.Collections;
 using Unity.Netcode;
@@ -64,15 +65,17 @@ namespace Controllers
         public bool IsDead = false;
         private bool IsFlipping = false;
         private int PlayerCounter { get; set; } = 0;
-        private float PlayerCoins { get; set; } = 10.0f;
+        private int Coins {get; set; } = 10;
+        public string MyPlayerId { get; set; }
+        public string AttackPlayerId { get; set; }
 #else
         public NetworkVariable<bool> IsAttacking = new NetworkVariable<bool>(false);
         public NetworkVariable<bool> IsHit = new NetworkVariable<bool>(false);
         public NetworkVariable<bool> IsDead = new NetworkVariable<bool>(false);
         private NetworkVariable<bool> IsFlipping = new NetworkVariable<bool>(false);
         private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
-        private NetworkVariable<float> PlayerCoins { get; set; } = new NetworkVariable<float>(10.0f);
         public NetworkVariable<string> AttackPlayerId { get; private set; } = new NetworkVariable<string>();
+        private NetworkVariable<int> Coins { get; set; } = new NetworkVariable<int>(10);
 #endif
         private Vector2 ServerMovementInput { get; set; }
         private Vector2 FacingDirection { get; set; }
@@ -97,10 +100,38 @@ namespace Controllers
 #if NOT_SERVER
             if (IsNotServerLocalPlayer)
                 LocalPlayerMarked.SetActive(true);
+            
+            CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
 #else
             if (IsLocalPlayer)
                 LocalPlayerMarked.SetActive(true);
+
+            Coins.OnValueChanged += (oldValue, newValue) =>
+            {
+               CoinsCounterUI.Instance.UpdateTotalCoins(newValue);
+               CoinsCounterUI.Instance.UpdateAddCoinsAmount(newValue - oldValue);
+            };
+
+            CoinsCounterUI.Instance.UpdateTotalCoins(Coins.Value);
 #endif
+        }
+
+        protected override void OnNetworkPostSpawn()
+        {
+            if (IsServer)
+            {
+                string playerId = AuthenticationService.Instance.PlayerId;
+                GameManager.Instance.Register(this,playerId);
+            }
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (IsServer)
+            {
+                string playerId = AuthenticationService.Instance.PlayerId;
+                GameManager.Instance.Unregister(playerId);
+            }
         }
 
         public void FixedUpdate()
@@ -264,6 +295,8 @@ namespace Controllers
 #if NOT_SERVER
             if (IsHit)
                 return;
+
+            AttackPlayerId = attackPlayerID;
 #else
             if (IsHit.Value)
                 return;
@@ -314,7 +347,38 @@ namespace Controllers
 
         public string GetPlayerId()
         {
+#if NOT_SERVER
+            return MyPlayerId;
+#endif
             return AuthenticationService.Instance.PlayerId;
+        }
+
+        public void AddCoinsLocal(int amountCoins)
+        {
+            Coins += amountCoins;
+            CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
+            CoinsCounterUI.Instance.UpdateAddCoinsAmount(amountCoins);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void AddCoinsServerRpc(string playerId, int amountCoins)
+        {
+#if !NOT_SERVER
+            var target = GameManager.Instance.GetPlayerControllerByAuthId(playerId);
+            if (target != null)
+            {
+                target.Coins.Value += amountCoins;
+            }
+#endif
+        }
+        
+        public int GetHalfCoins()
+        {
+#if UNITY_SERVER
+            return Mathf.FloorToInt(Coins.Value / 2);
+#else
+           return Mathf.FloorToInt(Coins / 2);
+#endif
         }
         
     }

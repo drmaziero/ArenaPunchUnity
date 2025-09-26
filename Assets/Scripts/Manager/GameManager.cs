@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Controllers;
 using UI;
 using Unity.Netcode;
 using Unity.Services.Authentication;
@@ -21,7 +23,7 @@ namespace Manager
        
        public static GameManager Instance { get; private set; }
        private const int TargetPlayersToEscape = 2;
-
+       private Dictionary<string, PlayerController> PlayersByAuthId { get; set; }
        
 #if NOT_SERVER
         private int TotalPlayersEliminated { get; set; } = 0; 
@@ -40,6 +42,8 @@ namespace Manager
            Instance = this;
            DontDestroyOnLoad(gameObject);
            Reset();
+           
+           PlayersByAuthId = new Dictionary<string, PlayerController>();
        }
 
        public void Reset()
@@ -106,6 +110,25 @@ namespace Manager
             
             PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated.Value.TotalPlayersEliminated);
         #endif
+       }
+
+       public void Register(PlayerController playerController, string playerId)
+       {
+           if (!PlayersByAuthId.ContainsKey(playerId))
+               PlayersByAuthId.Add(playerId,playerController);
+       }
+
+       public void Unregister(string playerId)
+       {
+           PlayersByAuthId.Remove(playerId);
+       }
+
+       public PlayerController GetPlayerControllerByAuthId(string playerId)
+       {
+           if (!PlayersByAuthId.ContainsKey(playerId))
+               return null;
+           
+           return PlayersByAuthId[playerId];
        }
 
        public struct EliminateCountData

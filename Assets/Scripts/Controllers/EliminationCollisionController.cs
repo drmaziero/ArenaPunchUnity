@@ -59,7 +59,11 @@ namespace Controllers
             string attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value;
             ShowGameOverClientRpc(attackerPlayerID);
             NetworkObject.Despawn(true);
+            var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
+            if (attackPlayerController != null)
+                attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
 #else
+            GameManager.Instance.Unregister(gameObject.GetComponent<PlayerController>().MyPlayerId);
             Destroy(this.gameObject);
             if (this.GetComponent<PlayerController>().IsNotServerLocalPlayer)
             {
@@ -67,6 +71,10 @@ namespace Controllers
             }
             else
                 GameManager.Instance.NotifyPlayerElimination();
+            
+            var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(gameObject.GetComponent<PlayerController>().MyPlayerId);
+            if (attackPlayerController != null)
+                attackPlayerController.AddCoinsLocal(GetComponent<PlayerController>().GetHalfCoins());
 #endif
 #if NOT_SERVER
             IsEliminated = false;

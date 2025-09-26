@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Controllers;
 using Unity.Netcode;
 using Unity.Services.Multiplay;
 using UnityEngine;
@@ -32,7 +33,9 @@ namespace Manager
             for (int i = 0; i < TotalLocalPlayers; i++)
             {
                 Transform spawnPoint = SpawnManager.Instance.GetNextSpawnPoint();
-                Instantiate(i == 0 ? PlayerLocalPrefab : NoPlayerLocalPrefab, spawnPoint.position, Quaternion.identity);
+                var newPlayer =Instantiate(i == 0 ? PlayerLocalPrefab : NoPlayerLocalPrefab, spawnPoint.position, Quaternion.identity);
+                newPlayer.GetComponent<PlayerController>().MyPlayerId = $"{i}";
+                GameManager.Instance.Register(newPlayer.GetComponent<PlayerController>(), newPlayer.GetComponent<PlayerController>().MyPlayerId);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1.0f));
