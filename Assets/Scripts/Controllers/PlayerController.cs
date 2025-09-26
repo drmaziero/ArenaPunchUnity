@@ -357,9 +357,24 @@ namespace Controllers
 #if NOT_SERVER
             Debug.Log($"Add Coins Local: {amountCoins}");
             Coins += amountCoins;
-            CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
-            CoinsCounterUI.Instance.UpdateAddCoinsAmount(amountCoins);
-            EndGameUI.Instance.UpdateCoins(Coins);
+            if (IsNotServerLocalPlayer)
+            {
+                CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
+                CoinsCounterUI.Instance.UpdateAddCoinsAmount(amountCoins);
+                EndGameUI.Instance.UpdateCoins(Coins);
+            }
+#endif
+        }
+        
+        public void LoseCoinsLocal()
+        {
+#if NOT_SERVER
+            Coins = 0;
+            if (IsNotServerLocalPlayer)
+            {
+                CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
+                EndGameUI.Instance.UpdateCoins(Coins);
+            }
 #endif
         }
 
@@ -371,6 +386,19 @@ namespace Controllers
             if (target != null)
             {
                 target.Coins.Value += amountCoins;
+                EndGameUI.Instance.UpdateCoins(target.Coins.Value);
+            }
+#endif
+        }
+        
+        [ServerRpc(RequireOwnership = false)]
+        public void LoseCoinsServerRpc(string playerId)
+        {
+#if !NOT_SERVER
+            var target = GameManager.Instance.GetPlayerControllerByAuthId(playerId);
+            if (target != null)
+            {
+                target.Coins.Value = 0;
                 EndGameUI.Instance.UpdateCoins(target.Coins.Value);
             }
 #endif

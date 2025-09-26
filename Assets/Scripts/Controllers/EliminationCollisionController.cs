@@ -3,6 +3,7 @@ using System.Collections;
 using Manager;
 using UI;
 using Unity.Netcode;
+using Unity.Services.Authentication;
 using UnityEngine;
 
 namespace Controllers
@@ -64,6 +65,7 @@ namespace Controllers
             var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
             if (attackPlayerController != null)
                 attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
+            GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
 #else
             Debug.Log($"Eliminate Player by: {gameObject.GetComponent<PlayerController>().AttackPlayerId}");
             GameManager.Instance.Unregister(gameObject.GetComponent<PlayerController>().MyPlayerId);
@@ -78,7 +80,9 @@ namespace Controllers
             var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(gameObject.GetComponent<PlayerController>().AttackPlayerId);
             if (attackPlayerController != null)
                 attackPlayerController.AddCoinsLocal(GetComponent<PlayerController>().GetHalfCoins());
+            GetComponent<PlayerController>().LoseCoinsLocal();
 #endif
+           
 #if NOT_SERVER
             IsEliminated = false;
 #else
