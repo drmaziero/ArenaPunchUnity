@@ -74,7 +74,7 @@ namespace Controllers
         public NetworkVariable<bool> IsDead = new NetworkVariable<bool>(false);
         private NetworkVariable<bool> IsFlipping = new NetworkVariable<bool>(false);
         private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
-        public NetworkVariable<string> AttackPlayerId { get; private set; } = new NetworkVariable<string>();
+        public NetworkVariable<FixedString128Bytes> AttackPlayerId { get; private set; } = new NetworkVariable<FixedString128Bytes>();
         private NetworkVariable<int> Coins { get; set; } = new NetworkVariable<int>(10);
 #endif
         private Vector2 ServerMovementInput { get; set; }

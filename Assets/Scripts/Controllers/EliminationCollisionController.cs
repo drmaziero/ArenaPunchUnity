@@ -59,7 +59,7 @@ namespace Controllers
             this.gameObject.GetComponent<PlayerController>().Eliminate();
             yield return new WaitForSeconds(0.25f);
 #if !NOT_SERVER
-            string attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value;
+            string attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value.ToString();
             ShowGameOverClientRpc(attackerPlayerID);
             NetworkObject.Despawn(true);
             var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);

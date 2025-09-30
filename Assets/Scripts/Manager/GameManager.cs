@@ -120,6 +120,7 @@ namespace Manager
            }
            
            TotalPlayersEliminated.Add(new EliminateCountData(){PlayerId = playerId, TotalPlayersEliminated = 0});
+           UpdateEliminationUIClientRpc(playerId, 0);
        }
 
        [ClientRpc]

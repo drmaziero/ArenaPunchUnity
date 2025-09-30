@@ -101,6 +101,28 @@ namespace Matchmaking
             {
                 Debug.LogError("[Local Server] server not started");
             }
+            else
+            {
+                NetworkManager.Singleton.OnClientConnectedCallback += (ulong id) =>
+                {
+                    connectedCount++;
+                    
+                    if (NetworkManager.Singleton.IsServer &&
+                        NetworkManager.Singleton.SceneManager != null &&
+                        connectedCount >= MinPlayersToStart &&
+                        SceneManager.GetActiveScene().name != GameManager.SceneNames.Game.ToString())
+                    {
+                        Debug.Log("[SERVER] Jogadores suficientes. Carregando cena Game...");
+                        NetworkManager.Singleton.SceneManager.LoadScene(GameManager.SceneNames.Game.ToString(),
+                            LoadSceneMode.Single);
+                    }
+                };
+                
+                NetworkManager.Singleton.OnClientDisconnectCallback += (ulong id) =>
+                {
+                    connectedCount = Mathf.Max(0, connectedCount - 1);
+                };
+            }
 #endif
         }
 
@@ -132,58 +154,6 @@ namespace Matchmaking
                 }
             }
         }
-        
-        /*
-        private async Task CreateBackfillTicket()
-        {
-            MatchmakingResults results = null;
-
-            try
-            {
-                results = await MultiplayService.Instance
-                    .GetPayloadAllocationFromJsonAs<MatchmakingResults>();
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[SERVER] Sem payload disponível (provavelmente teste manual ou sem matchmaking): {e.Message}");
-                return; // não cria ticket se não tem payload
-            }
-
-            if (results == null)
-            {
-                Debug.LogWarning("[SERVER] Payload retornou nulo, cancelando criação de backfill ticket.");
-                return;
-            }
-
-            Debug.Log(
-                $"Environment: {results.EnvironmentId} MatchId: {results.MatchId} " +
-                $"Match Properties: {results.MatchProperties}");
-
-            var backfillTicketProperties = new BackfillTicketProperties(results.MatchProperties);
-
-            string queueName = "ArenaPunchQueue"; // precisa existir igual no Dashboard
-            string connectionString =
-                $"{MultiplayService.Instance.ServerConfig.IpAddress}:{MultiplayService.Instance.ServerConfig.Port}";
-
-            var options = new CreateBackfillTicketOptions(
-                queueName,
-                connectionString,
-                new Dictionary<string, object>(), // custom properties se precisar
-                backfillTicketProperties);
-
-            /*
-            Debug.Log("[SERVER] Requesting backfill ticket...");
-            try
-            {
-                ticketId = await MatchmakerService.Instance.CreateBackfillTicketAsync(options);
-                Debug.Log($"[SERVER] Backfill ticket criado com sucesso: {ticketId}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[SERVER] Falha ao criar backfill ticket: {e.Message}");
-            }
-            */
-        //}
 
         private void OnSubscriptionStateChanged(MultiplayServerSubscriptionState obj)
         {
