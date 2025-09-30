@@ -32,6 +32,14 @@ namespace Matchmaking
             enabled = false;
             return;
 #endif
+            
+#if LOCAL_CLIENT
+            var unityTransport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            unityTransport.SetConnectionData("127.0.0.1",7777);
+            bool result = NetworkManager.Singleton.StartClient();
+            StatusDebug.SetText($"[ClientLocal] Start Client: {result}");
+
+#else
             if (UnityServices.State != ServicesInitializationState.Initialized)
                 await UnityServices.InitializeAsync();
             if (!AuthenticationService.Instance.IsSignedIn)
@@ -41,6 +49,7 @@ namespace Matchmaking
             NetworkManager.Singleton.OnClientDisconnectCallback += ClientDisconnected;
 
             FindMatchButton.onClick.AddListener(FindMatchAsync);
+#endif
         }
 
         private void OnDestroy()

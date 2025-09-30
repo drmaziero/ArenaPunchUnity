@@ -64,7 +64,6 @@ namespace Manager
                         currentPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
                     }
                 }
-                GameManager.Instance.NotifyPlayerElimination(true);
             }
         }
 

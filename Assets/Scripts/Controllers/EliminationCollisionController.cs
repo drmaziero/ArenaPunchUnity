@@ -45,7 +45,7 @@ namespace Controllers
                 EndGameUI.Instance.Show();
             }
             else
-                GameManager.Instance.NotifyPlayerElimination(false,notifyPlayerId);
+                GameManager.Instance.UpdateOrCreatePlayerEliminationDataRpc(notifyPlayerId);
 #endif
         }
 

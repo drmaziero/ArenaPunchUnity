@@ -121,6 +121,7 @@ namespace Controllers
             {
                 string playerId = AuthenticationService.Instance.PlayerId;
                 GameManager.Instance.Register(this,playerId);
+                GameManager.Instance.UpdateOrCreatePlayerEliminationDataRpc(playerId);
             }
         }
 
@@ -130,6 +131,7 @@ namespace Controllers
             {
                 string playerId = AuthenticationService.Instance.PlayerId;
                 GameManager.Instance.Unregister(playerId);
+                GameManager.Instance.RemoveEliminationDataRpc(playerId);
             }
         }
 

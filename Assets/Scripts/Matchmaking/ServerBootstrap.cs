@@ -55,11 +55,14 @@ namespace Matchmaking
         }
 
         private async void StartServer()
-        {
+        { 
+#if !LOCAL_SERVER
             if (UnityServices.State != ServicesInitializationState.Initialized)
             {
                 Debug.Log("[Server] Init State");
                 await UnityServices.InitializeAsync();
+
+                GameManager.Instance.Reset();
 
                 var callbacks = new MultiplayEventCallbacks();
                 callbacks.Allocate += OnAllocate;
@@ -86,34 +89,21 @@ namespace Matchmaking
                 {
                     OnAllocate(new MultiplayAllocation("", serverConfig.ServerId, serverConfig.AllocationId));
                 }
-                
             }
+#else
+            Debug.Log("[Local Server] Starting Local Server...");
+            GameManager.Instance.Reset();
 
-            /*
-
-            var server = MultiplayService.Instance.ServerConfig;
             var unityTransport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-            unityTransport.SetConnectionData("0.0.0.0", server.Port);
-            Debug.Log($"Network Transport {unityTransport.ConnectionData.Address}:{unityTransport.ConnectionData.Port}");
+            unityTransport.SetConnectionData("127.0.0.1",7777);
 
             if (!NetworkManager.Singleton.StartServer())
             {
-                Debug.LogError("Failed to start Server");
-                throw new Exception("Failed o start server");
+                Debug.LogError("[Local Server] server not started");
             }
-            
-            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-            NetworkManager.Singleton.OnServerStopped += b => { Debug.Log("Server Stopped"); };
-            Debug.Log($"Starter Server {unityTransport.ConnectionData.Address}:{unityTransport.ConnectionData.Port}");
-            
-            
-
-            var events = await MultiplayService.Instance.SubscribeToServerEventsAsync(callbacks);
-            await CreateBackfillTicket();
-            */
+#endif
         }
-        
+
         private void Update()
         {
             autoAllocateTimer -= Time.deltaTime;

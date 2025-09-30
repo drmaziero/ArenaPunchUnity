@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Controllers;
 using UI;
+using Unity.Collections;
 using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Multiplay;
@@ -28,7 +29,7 @@ namespace Manager
 #if NOT_SERVER
         private int TotalPlayersEliminated { get; set; } = 0; 
 #else
-        private NetworkVariable<EliminateCountData> TotalPlayersEliminated { get; set; } = new NetworkVariable<EliminateCountData>();
+        private NetworkList<EliminateCountData> TotalPlayersEliminated { get; set; }
 #endif
 
        private void Awake()
@@ -41,9 +42,11 @@ namespace Manager
 
            Instance = this;
            DontDestroyOnLoad(gameObject);
+#if NOT_SERVER
            Reset();
-           
+#endif
            PlayersByAuthId = new Dictionary<string, PlayerController>();
+           TotalPlayersEliminated = new NetworkList<EliminateCountData>();
        }
 
        public void Reset()
@@ -51,8 +54,7 @@ namespace Manager
 #if NOT_SERVER
            TotalPlayersEliminated = 0; 
 #else
-           TotalPlayersEliminated.Value = new EliminateCountData()
-               { PlayerId = AuthenticationService.Instance.PlayerId, TotalPlayersEliminated = 0 };
+           TotalPlayersEliminated.Clear();
 #endif
        }
 
@@ -98,20 +100,49 @@ namespace Manager
                TotalPlayersEliminated++;
            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated);
            EndGameUI.Instance.UpdatePlayerEliminated(TotalPlayersEliminated);
-        #else
-            if (!notUpdate) 
-                return;
-            
-            if (playerID != AuthenticationService.Instance.PlayerId)
-                return;
-
-            var newEliminatedData = TotalPlayersEliminated.Value;
-            newEliminatedData.TotalPlayersEliminated++;
-            TotalPlayersEliminated.Value = newEliminatedData;
-            
-            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - TotalPlayersEliminated.Value.TotalPlayersEliminated);
-            EndGameUI.Instance.UpdatePlayerEliminated(TotalPlayersEliminated.Value.TotalPlayersEliminated);
         #endif
+       }
+
+       [ServerRpc]
+       public void UpdateOrCreatePlayerEliminationDataRpc(string playerId)
+       {
+           for (var i = 0; i < TotalPlayersEliminated.Count; i++)
+           {
+               if (TotalPlayersEliminated[i].PlayerId == playerId)
+               {
+                   var newData = TotalPlayersEliminated[i];
+                   newData.TotalPlayersEliminated++;
+                   TotalPlayersEliminated[i] = newData;
+
+                   UpdateEliminationUIClientRpc(playerId, newData.TotalPlayersEliminated);
+                   return;
+               }
+           }
+           
+           TotalPlayersEliminated.Add(new EliminateCountData(){PlayerId = playerId, TotalPlayersEliminated = 0});
+       }
+
+       [ClientRpc]
+       private void UpdateEliminationUIClientRpc(string playerId, int totalEliminatedCount)
+       {
+           if (playerId != AuthenticationService.Instance.PlayerId)
+               return;
+           
+           PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - totalEliminatedCount);
+           EndGameUI.Instance.UpdatePlayerEliminated(totalEliminatedCount);
+       }
+
+       [ServerRpc]
+       public void RemoveEliminationDataRpc(string playerId)
+       {
+           for (var i = 0; i < TotalPlayersEliminated.Count; i++)
+           {
+               if (TotalPlayersEliminated[i].PlayerId == playerId)
+               {
+                   TotalPlayersEliminated.RemoveAt(i);
+                   return;
+               }
+           }
        }
 
        public void Register(PlayerController playerController, string playerId)
@@ -136,10 +167,31 @@ namespace Manager
            return PlayersByAuthId[playerId];
        }
 
-       public struct EliminateCountData
+       public struct EliminateCountData : INetworkSerializable, IEquatable<EliminateCountData>
        {
-           public string PlayerId { get; set; }
-           public int TotalPlayersEliminated { get; set; }
+           public FixedString128Bytes PlayerId;
+           public int TotalPlayersEliminated;
+           
+           public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+           {
+               serializer.SerializeValue(ref PlayerId);
+               serializer.SerializeValue(ref TotalPlayersEliminated);
+           }
+
+           public bool Equals(EliminateCountData other)
+           {
+               return PlayerId.Equals(other.PlayerId) && TotalPlayersEliminated == other.TotalPlayersEliminated;
+           }
+
+           public override bool Equals(object obj)
+           {
+               return obj is EliminateCountData other && Equals(other);
+           }
+
+           public override int GetHashCode()
+           {
+               return HashCode.Combine(PlayerId, TotalPlayersEliminated);
+           }
        }
     }
 }
