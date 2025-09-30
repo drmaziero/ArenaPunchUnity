@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Manager;
 using UI;
+using Unity.Collections;
 using Unity.Netcode;
 using Unity.Services.Authentication;
 using UnityEngine;
@@ -36,7 +37,7 @@ namespace Controllers
         }
 
         [ClientRpc]
-        private void ShowGameOverClientRpc(string notifyPlayerId)
+        private void ShowGameOverClientRpc(FixedString128Bytes notifyPlayerId)
         {
 #if !NOT_SERVER
             if (IsOwner)
@@ -59,7 +60,7 @@ namespace Controllers
             this.gameObject.GetComponent<PlayerController>().Eliminate();
             yield return new WaitForSeconds(0.25f);
 #if !NOT_SERVER
-            string attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value.ToString();
+            FixedString128Bytes attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value.ToString();
             ShowGameOverClientRpc(attackerPlayerID);
             NetworkObject.Despawn(true);
             var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);

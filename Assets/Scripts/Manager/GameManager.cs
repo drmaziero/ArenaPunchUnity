@@ -24,7 +24,7 @@ namespace Manager
        
        public static GameManager Instance { get; private set; }
        private const int TargetPlayersToEscape = 2;
-       private Dictionary<string, PlayerController> PlayersByAuthId { get; set; }
+       private Dictionary<FixedString128Bytes, PlayerController> PlayersByAuthId { get; set; }
        
 #if NOT_SERVER
         private int TotalPlayersEliminated { get; set; } = 0; 
@@ -45,7 +45,7 @@ namespace Manager
 #if NOT_SERVER
            Reset();
 #endif
-           PlayersByAuthId = new Dictionary<string, PlayerController>();
+           PlayersByAuthId = new Dictionary<FixedString128Bytes, PlayerController>();
            TotalPlayersEliminated = new NetworkList<EliminateCountData>();
        }
 
@@ -104,7 +104,7 @@ namespace Manager
        }
 
        [ServerRpc]
-       public void UpdateOrCreatePlayerEliminationDataRpc(string playerId)
+       public void UpdateOrCreatePlayerEliminationDataRpc(FixedString128Bytes playerId)
        {
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
            {
@@ -124,7 +124,7 @@ namespace Manager
        }
 
        [ClientRpc]
-       private void UpdateEliminationUIClientRpc(string playerId, int totalEliminatedCount)
+       private void UpdateEliminationUIClientRpc(FixedString128Bytes playerId, int totalEliminatedCount)
        {
            if (playerId != AuthenticationService.Instance.PlayerId)
                return;
@@ -134,7 +134,7 @@ namespace Manager
        }
 
        [ServerRpc]
-       public void RemoveEliminationDataRpc(string playerId)
+       public void RemoveEliminationDataRpc(FixedString128Bytes playerId)
        {
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
            {
@@ -146,20 +146,20 @@ namespace Manager
            }
        }
 
-       public void Register(PlayerController playerController, string playerId)
+       public void Register(PlayerController playerController, FixedString128Bytes playerId)
        {
            if (!PlayersByAuthId.ContainsKey(playerId))
                PlayersByAuthId.Add(playerId,playerController);
        }
 
-       public void Unregister(string playerId)
+       public void Unregister(FixedString128Bytes playerId)
        {
            PlayersByAuthId.Remove(playerId);
        }
 
-       public PlayerController GetPlayerControllerByAuthId(string playerId)
+       public PlayerController GetPlayerControllerByAuthId(FixedString128Bytes playerId)
        {
-           if (string.IsNullOrEmpty(playerId))
+           if (string.IsNullOrEmpty(playerId.ToString()))
                return null;
            
            if (!PlayersByAuthId.ContainsKey(playerId))

@@ -119,7 +119,7 @@ namespace Controllers
         {
             if (IsServer)
             {
-                string playerId = AuthenticationService.Instance.PlayerId;
+                FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
                 GameManager.Instance.Register(this,playerId);
                 GameManager.Instance.UpdateOrCreatePlayerEliminationDataRpc(playerId);
             }
@@ -129,7 +129,7 @@ namespace Controllers
         {
             if (IsServer)
             {
-                string playerId = AuthenticationService.Instance.PlayerId;
+                FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
                 GameManager.Instance.Unregister(playerId);
                 GameManager.Instance.RemoveEliminationDataRpc(playerId);
             }
@@ -381,7 +381,7 @@ namespace Controllers
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void AddCoinsServerRpc(string playerId, int amountCoins)
+        public void AddCoinsServerRpc(FixedString128Bytes playerId, int amountCoins)
         {
 #if !NOT_SERVER
             var target = GameManager.Instance.GetPlayerControllerByAuthId(playerId);
