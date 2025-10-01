@@ -47,6 +47,49 @@ namespace Manager
 #endif
            PlayersByAuthId = new Dictionary<FixedString128Bytes, PlayerController>();
            TotalPlayersEliminated = new NetworkList<EliminateCountData>();
+           TotalPlayersEliminated.OnListChanged += OnEliminationListChanged;
+       }
+
+       private void OnEliminationListChanged(NetworkListEvent<EliminateCountData> changeEvent)
+       {
+           switch (changeEvent.Type)
+           {
+               case NetworkListEvent<EliminateCountData>.EventType.Add:
+                   if (NetworkManager.Singleton.IsClient)
+                   {
+                       if (changeEvent.Value.PlayerId.ToString() == AuthenticationService.Instance.PlayerId)
+                       {
+                           Debug.Log($"[Client] Update Counter (Add): {TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated}");
+                           PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated);
+                           EndGameUI.Instance.UpdatePlayerEliminated(changeEvent.Value.TotalPlayersEliminated);
+                       }
+                   }
+
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.Insert:
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.Remove:
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.RemoveAt:
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.Value:
+                   if (NetworkManager.Singleton.IsClient)
+                   {
+                       if (changeEvent.Value.PlayerId.ToString() == AuthenticationService.Instance.PlayerId)
+                       {
+                           Debug.Log($"[Client] Update Counter (Update): {TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated}");
+                           PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated);
+                           EndGameUI.Instance.UpdatePlayerEliminated(changeEvent.Value.TotalPlayersEliminated);
+                       }
+                   }
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.Clear:
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.Full:
+                   break;
+               default:
+                   throw new ArgumentOutOfRangeException();
+           }
        }
 
        public void Reset()
@@ -113,27 +156,13 @@ namespace Manager
                    var newData = TotalPlayersEliminated[i];
                    newData.TotalPlayersEliminated++;
                    TotalPlayersEliminated[i] = newData;
-
-                   UpdateEliminationUIClientRpc(playerId, newData.TotalPlayersEliminated);
                    return;
                }
            }
            
            TotalPlayersEliminated.Add(new EliminateCountData(){PlayerId = playerId, TotalPlayersEliminated = 0});
-           UpdateEliminationUIClientRpc(playerId, 0);
        }
-
-       [ClientRpc]
-       private void UpdateEliminationUIClientRpc(FixedString128Bytes playerId, int totalEliminatedCount)
-       {
-           Debug.Log("[Client] Update Elimination UI Client RPC");
-           if (playerId != AuthenticationService.Instance.PlayerId)
-               return;
-           
-           Debug.Log($"[Client] Update Counter: {TargetPlayersToEscape - totalEliminatedCount}");
-           PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - totalEliminatedCount);
-           EndGameUI.Instance.UpdatePlayerEliminated(totalEliminatedCount);
-       }
+       
 
        [ServerRpc]
        public void RemoveEliminationDataRpc(FixedString128Bytes playerId)
