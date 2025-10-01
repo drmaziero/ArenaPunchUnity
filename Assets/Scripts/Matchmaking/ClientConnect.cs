@@ -60,11 +60,13 @@ namespace Matchmaking
 
         private void ClientDisconnected(ulong clientId)
         {
+            Debug.Log($"[Client Disconnected]: {NetworkManager.Singleton.DisconnectReason}");
             ServerBootstrap.Instance.UnregisterPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
         }
 
         private void ClientConnected(ulong clientId)
         {
+            Debug.Log($"[Client Connected]");
             ServerBootstrap.Instance.RegisterPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
         }
 
@@ -111,7 +113,7 @@ namespace Matchmaking
                     case MultiplayAssignment.StatusOptions.Found:
                         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(assignment.Ip, (ushort)assignment.Port);
                         bool result = NetworkManager.Singleton.StartClient();
-                        StatusDebug.SetText($"[CLIENT] Start Client: {result} on {assignment.Ip}:{assignment.Port}");
+                        StatusDebug.SetText($"[CLIENT] Start Client: {result} on {assignment.Ip}:{assignment.Port} : [{result}]");
                         break;
 
                     case MultiplayAssignment.StatusOptions.InProgress:

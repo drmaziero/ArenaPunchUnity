@@ -126,9 +126,11 @@ namespace Manager
        [ClientRpc]
        private void UpdateEliminationUIClientRpc(FixedString128Bytes playerId, int totalEliminatedCount)
        {
+           Debug.Log("[Client] Update Elimination UI Client RPC");
            if (playerId != AuthenticationService.Instance.PlayerId)
                return;
            
+           Debug.Log($"[Client] Update Counter: {TargetPlayersToEscape - totalEliminatedCount}");
            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - totalEliminatedCount);
            EndGameUI.Instance.UpdatePlayerEliminated(totalEliminatedCount);
        }
