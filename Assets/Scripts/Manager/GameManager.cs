@@ -145,9 +145,8 @@ namespace Manager
            EndGameUI.Instance.UpdatePlayerEliminated(TotalPlayersEliminated);
         #endif
        }
-
-       [ServerRpc]
-       public void UpdateOrCreatePlayerEliminationDataRpc(FixedString128Bytes playerId)
+       
+       public void UpdateOrCreatePlayerElimination(FixedString128Bytes playerId)
        {
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
            {
@@ -163,9 +162,8 @@ namespace Manager
            TotalPlayersEliminated.Add(new EliminateCountData(){PlayerId = playerId, TotalPlayersEliminated = 0});
        }
        
-
-       [ServerRpc]
-       public void RemoveEliminationDataRpc(FixedString128Bytes playerId)
+       
+       public void RemoveElimination(FixedString128Bytes playerId)
        {
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
            {

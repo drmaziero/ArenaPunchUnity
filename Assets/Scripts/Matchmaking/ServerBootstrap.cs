@@ -251,31 +251,6 @@ namespace Matchmaking
             connectedCount = Mathf.Max(0, connectedCount - 1);
         }
 
-        /*
-        private IEnumerator ApproveBackfillTicketEverySecond()
-        {
-            for (int i = 4; i >= 0; i--)
-            {
-                Debug.Log($"Waiting {i} seconds to start backfill");
-                yield return new WaitForSeconds(1);
-            }
-
-            while (true)
-            {
-                yield return new WaitForSeconds(1);
-                if (string.IsNullOrEmpty(ticketId))
-                {
-                    Debug.Log("No backfill ticket to approve");
-                    continue;
-                }
-                
-                Debug.Log($"Doing backfill approval for ticket ID: {ticketId}");
-                yield return MatchmakerService.Instance.ApproveBackfillTicketAsync(ticketId);
-                Debug.Log($"Approved backfill ticket {ticketId}");
-            }
-        }
-        */
-
         private async void HandleUpdateBackfillTickets()
         {
             if (backfillTickedId != null && payloadAllocation != null)

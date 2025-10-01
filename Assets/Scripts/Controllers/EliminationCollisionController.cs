@@ -45,9 +45,13 @@ namespace Controllers
                 Debug.LogWarning("Show Game Over UI");
                 EndGameUI.Instance.Show();
             }
-            else
-                GameManager.Instance.UpdateOrCreatePlayerEliminationDataRpc(notifyPlayerId);
 #endif
+            if (IsClient)
+            {
+                if (notifyPlayerId == AuthenticationService.Instance.PlayerId)
+                    EndGameUI.Instance.Show();
+            }
+            
         }
 
         private IEnumerator StartingElimination()
@@ -61,12 +65,16 @@ namespace Controllers
             yield return new WaitForSeconds(0.25f);
 #if !NOT_SERVER
             FixedString128Bytes attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value.ToString();
-            ShowGameOverClientRpc(attackerPlayerID);
+            this.gameObject.GetComponent<PlayerController>().Eliminate();
+            yield return new WaitForSeconds(0.25f);
             NetworkObject.Despawn(true);
+            ShowGameOverClientRpc(GetComponent<PlayerController>().GetPlayerId());
+            
             var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
             if (attackPlayerController != null)
                 attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
             GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
+            GameManager.Instance.UpdateOrCreatePlayerElimination(attackerPlayerID);
 #else
             Debug.Log($"Eliminate Player by: {gameObject.GetComponent<PlayerController>().AttackPlayerId}");
             GameManager.Instance.Unregister(gameObject.GetComponent<PlayerController>().MyPlayerId);

@@ -121,7 +121,7 @@ namespace Controllers
             {
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
                 GameManager.Instance.Register(this,playerId);
-                GameManager.Instance.UpdateOrCreatePlayerEliminationDataRpc(playerId);
+                GameManager.Instance.UpdateOrCreatePlayerElimination(playerId);
             }
         }
 
@@ -131,7 +131,7 @@ namespace Controllers
             {
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
                 GameManager.Instance.Unregister(playerId);
-                GameManager.Instance.RemoveEliminationDataRpc(playerId);
+                GameManager.Instance.RemoveElimination(playerId);
             }
         }
 

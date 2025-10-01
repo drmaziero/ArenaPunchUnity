@@ -151,8 +151,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 340245bfc6f74c5baf82c99b28180043, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <FallbackPort>k__BackingField: 7777
-  <MinPlayersToStart>k__BackingField: 1
+  <MinPlayersToStart>k__BackingField: 2
+  <MaxPlayersToStart>k__BackingField: 8
 --- !u!4 &875461448
 Transform:
   m_ObjectHideFlags: 0
