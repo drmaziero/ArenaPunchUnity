@@ -27,6 +27,7 @@ namespace Controllers
                     Vector2 pushDirection = (transform.position - enemy.transform.position).normalized;
                     Owner.ApplyPush(pushDirection);
                     Owner.GetHit(enemy.GetPlayerId());
+                    enemy.ApplyHitVFXClientRpc(enemy.GetPlayerId());
                 }
 #else
                 if (enemy.IsAttacking)

@@ -326,8 +326,20 @@ namespace Controllers
             StartCoroutine(PerformHitVFX());
         }
 
+        [ClientRpc]
+        public void ApplyHitVFXClientRpc(FixedString128Bytes playerId)
+        {
+            Debug.Log($"[Client]: Apply Hit VFX via Client RPC");
+            if (!IsClient)
+                return;
+            
+            if (playerId == AuthenticationService.Instance.PlayerId)
+                StartCoroutine(PerformHitVFX());
+        }
+
         private IEnumerator PerformHitVFX()
         {
+            Debug.Log($"Perform Hit VFX");
             HitVFXSpriteRender.gameObject.SetActive(true);
             yield return new WaitForSeconds(AttackVFXDuration);
             HitVFXSpriteRender.gameObject.SetActive(false);
@@ -339,8 +351,20 @@ namespace Controllers
             StartCoroutine(PerformEliminate());
         }
 
+        [ClientRpc]
+        public void EliminateClientRpc(FixedString128Bytes playerId)
+        {
+            Debug.Log($"[Client]: Eliminate via Client RPC");
+            if (!IsClient)
+                return;
+            
+            if (AuthenticationService.Instance.PlayerId == playerId)
+                StartCoroutine(PerformEliminate());
+        }
+
         private IEnumerator PerformEliminate()
         {
+            Debug.Log("Perform Eliminate");
             EliminationVFXSpriteRenderer.gameObject.SetActive(true);
             yield return new WaitForSeconds(EliminateVFXDuration);
             EliminationVFXSpriteRenderer.gameObject.SetActive(false);

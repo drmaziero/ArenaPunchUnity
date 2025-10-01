@@ -64,17 +64,25 @@ namespace Controllers
             this.gameObject.GetComponent<PlayerController>().Eliminate();
             yield return new WaitForSeconds(0.25f);
 #if !NOT_SERVER
-            FixedString128Bytes attackerPlayerID = GetComponent<PlayerController>().AttackPlayerId.Value.ToString();
-            this.gameObject.GetComponent<PlayerController>().Eliminate();
-            yield return new WaitForSeconds(0.25f);
+            if (IsServer)
+            {
+                var eliminatedPlayerController = GetComponent<PlayerController>();
+                FixedString128Bytes attackerPlayerID = eliminatedPlayerController.AttackPlayerId.Value.ToString();
+                FixedString128Bytes eliminatedPlayerID = eliminatedPlayerController.GetPlayerId();
+                
+                this.gameObject.GetComponent<PlayerController>().EliminateClientRpc(eliminatedPlayerID);
+            }
+            /*
+            yield return new WaitForSeconds(0.5f);
             NetworkObject.Despawn(true);
             ShowGameOverClientRpc(GetComponent<PlayerController>().GetPlayerId());
-            
+
             var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
             if (attackPlayerController != null)
                 attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
             GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
             GameManager.Instance.UpdateOrCreatePlayerElimination(attackerPlayerID);
+            */
 #else
             Debug.Log($"Eliminate Player by: {gameObject.GetComponent<PlayerController>().AttackPlayerId}");
             GameManager.Instance.Unregister(gameObject.GetComponent<PlayerController>().MyPlayerId);
