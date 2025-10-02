@@ -137,9 +137,11 @@ namespace Controllers
 
         private IEnumerator RegisterWhenReady(ulong clientId)
         {
+            Debug.Log("Register When Ready...");
             while (!AuthenticationService.Instance.IsSignedIn)
                 yield return null;
             
+            Debug.Log($"Send RPC: Player Id = {AuthenticationService.Instance.PlayerId}, client Id: {clientId}");
             FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
             GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,clientId);
             GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
