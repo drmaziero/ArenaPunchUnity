@@ -200,25 +200,22 @@ namespace Manager
            }
        }
        
-       
-
        public PlayerController GetPlayerControllerByAuthId(FixedString128Bytes playerId)
        {
            if (string.IsNullOrEmpty(playerId.ToString()))
                return null;
            
-           if (!PlayersByAuthId.ContainsKey(playerId))
-               return null;
-           
-           return PlayersByAuthId[playerId];
+           return !PlayersByAuthId.ContainsKey(playerId) ? null : PlayersByAuthId[playerId];
        }
 
        public FixedString128Bytes GetAuthIdByClientId(ulong clientId)
        {
-           if (!AuthIdByClientId.ContainsKey(clientId))
-               return "";
-
-           return AuthIdByClientId[clientId];
+           foreach (var x in AuthIdByClientId)
+           {
+               Debug.Log($"Auth Id by Client Id: {x.Key} => {x.Value}, param: {clientId}");
+           }
+           
+           return !AuthIdByClientId.ContainsKey(clientId) ? "" : AuthIdByClientId[clientId];
        }
    
 
