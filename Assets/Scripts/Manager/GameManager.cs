@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 namespace Manager
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : NetworkBehaviour
     {
        public enum SceneNames
        {

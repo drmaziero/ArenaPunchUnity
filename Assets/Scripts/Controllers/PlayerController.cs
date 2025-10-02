@@ -112,44 +112,36 @@ namespace Controllers
             };
 
             CoinsCounterUI.Instance.UpdateTotalCoins(Coins.Value);
-
-            NetworkManager.Singleton.OnClientConnectedCallback += UpdateClientAfterSpawn;
-            NetworkManager.Singleton.OnClientDisconnectCallback += UpdateClientAfterDespawn;
 #endif
         }
         
-        private void OnDisable()
-        {
-            if (IsClient)
-            {
-                NetworkManager.Singleton.OnClientConnectedCallback += UpdateClientAfterSpawn;
-                NetworkManager.Singleton.OnClientDisconnectCallback += UpdateClientAfterDespawn;
-            }
-        }
 
-        private void UpdateClientAfterSpawn(ulong clientId)
+        public override void OnNetworkSpawn()
         {
+            Debug.LogWarning("[Client]: Update Client After Spawn");
             if (IsClient && IsOwner)
             {
-                StartCoroutine(RegisterWhenReady(clientId));
+                Debug.Log("[Client] Start Register When Ready");
+                StartCoroutine(RegisterWhenReady());
             }
         }
 
-        private IEnumerator RegisterWhenReady(ulong clientId)
+        private IEnumerator RegisterWhenReady()
         {
             Debug.Log("Register When Ready...");
             while (!AuthenticationService.Instance.IsSignedIn)
                 yield return null;
             
-            Debug.Log($"Send RPC: Player Id = {AuthenticationService.Instance.PlayerId}, client Id: {clientId}");
+            Debug.Log($"Send RPC: Player Id = {AuthenticationService.Instance.PlayerId}, client Id: {OwnerClientId}");
             FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-            GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,clientId);
+            GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,OwnerClientId);
             GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
         }
 
-        public void UpdateClientAfterDespawn(ulong clientId)
+        public override void OnNetworkDespawn()
         {
-            if (IsClient)
+            Debug.LogWarning("[Client]: Update Client After Despawn");
+            if (IsClient && IsOwner)
             {
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
                 GameManager.Instance.UnregisterServerRpc(playerId);
