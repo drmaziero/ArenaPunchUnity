@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Controllers;
 using UI;
 using Unity.Collections;
@@ -195,6 +196,19 @@ namespace Manager
                return null;
            
            return PlayersByAuthId[playerId];
+       }
+
+       public FixedString128Bytes GetAuthIdByPlayerController(PlayerController playerController)
+       {
+           if (playerController is null)
+               return "";
+
+           foreach (var element in PlayersByAuthId.Where(element => element.Value == playerController))
+           {
+               return element.Key;
+           }
+
+           return "";
        }
 
        public struct EliminateCountData : INetworkSerializable, IEquatable<EliminateCountData>

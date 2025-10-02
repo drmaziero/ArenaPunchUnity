@@ -376,7 +376,13 @@ namespace Controllers
 #if NOT_SERVER
             return MyPlayerId;
 #endif
-            return AuthenticationService.Instance.PlayerId;
+            if (IsClient)
+                return AuthenticationService.Instance.PlayerId;
+            
+            if (IsServer)
+                return GameManager.Instance.GetAuthIdByPlayerController(this).ToString();
+
+            return string.Empty;
         }
 
         public void AddCoinsLocal(int amountCoins)
