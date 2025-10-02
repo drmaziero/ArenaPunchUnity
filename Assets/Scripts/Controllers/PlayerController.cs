@@ -68,6 +68,7 @@ namespace Controllers
         public int Coins { get; private set; } = 10;
         public string MyPlayerId { get; set; }
         public string AttackPlayerId { get; set; }
+        private bool CanAttack { get; set; }
 #else
         public NetworkVariable<bool> IsAttacking = new NetworkVariable<bool>(false);
         public NetworkVariable<bool> IsHit = new NetworkVariable<bool>(false);
@@ -76,6 +77,7 @@ namespace Controllers
         private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
         public NetworkVariable<FixedString128Bytes> AttackPlayerId { get; private set; } = new NetworkVariable<FixedString128Bytes>();
         private NetworkVariable<int> Coins { get; set; } = new NetworkVariable<int>(10);
+        private NetworkVariable<bool> CanAttack { get; set; } = new NetworkVariable<bool>();
 #endif
         private Vector2 ServerMovementInput { get; set; }
         private Vector2 FacingDirection { get; set; }
@@ -85,7 +87,7 @@ namespace Controllers
         
         private const string IsMoving = "IsMoving";
        
-       private bool CanAttack { get; set; }
+       
       
 
         private void Start()
@@ -93,15 +95,17 @@ namespace Controllers
             ServerMovementInput = Vector2.zero;
             FacingDirection = Vector2.zero;
 
-            CanAttack = true;
+            
             Rigidbody = GetComponent<Rigidbody2D>();
             
 #if NOT_SERVER
+            CanAttack = true;
             if (IsNotServerLocalPlayer)
                 LocalPlayerMarked.SetActive(true);
             
             CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
 #else
+            CanAttack.Value = true;
             if (IsLocalPlayer)
                 LocalPlayerMarked.SetActive(true);
 
@@ -272,9 +276,13 @@ namespace Controllers
 
         public void HandleAttack(Vector3 direction)
         {
+#if NOT_SERVER
             if (!CanAttack)
                 return;
-
+#else
+            if (!CanAttack.Value)
+                return;
+#endif
             Vector3 normalizeDirection = direction.sqrMagnitude > 0.0001f ? direction : FacingDirection;
             FacingDirection = normalizeDirection;
             StartCoroutine(PerformAttack());
@@ -282,21 +290,25 @@ namespace Controllers
 
         private IEnumerator PerformAttack()
         {
-            CanAttack = false;
+           
 #if NOT_SERVER
+            CanAttack = false;
             IsAttacking = true;
 #else
             IsAttacking.Value = true;
+            CanAttack.Value = false;
 #endif
             GloveAnimator.Play("Attack");
             yield return new WaitForSeconds(AttackDuration);
 #if NOT_SERVER
             IsAttacking = false;
+             yield return new WaitForSeconds(AttackCooldown);
+            CanAttack = true;
 #else
              IsAttacking.Value = false;
+             yield return new WaitForSeconds(AttackCooldown);
+             CanAttack.Value = true;
 #endif
-            yield return new WaitForSeconds(AttackCooldown);
-            CanAttack = true;
         }
 
         
@@ -342,7 +354,7 @@ namespace Controllers
         }
 
         [ClientRpc]
-        public void ApplyHitVFXClientRpc(FixedString128Bytes playerId)
+        public void ApplyHitVFXClientRpc(string playerId)
         {
             Debug.Log($"[Client]: Apply Hit VFX via Client RPC");
             if (!IsClient)

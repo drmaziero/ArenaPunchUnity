@@ -194,7 +194,7 @@ namespace Manager
            }
        }
 
-       [ServerRpc]
+       [ServerRpc(RequireOwnership = false)]
        public void UnregisterServerRpc(FixedString128Bytes playerId)
        {
            PlayersByAuthId.Remove(playerId);

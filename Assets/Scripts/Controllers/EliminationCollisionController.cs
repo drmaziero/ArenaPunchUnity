@@ -74,6 +74,8 @@ namespace Controllers
                 
                 yield return new WaitForSeconds(0.5f);
                 NetworkObject.Despawn(true);
+                
+                /*
                 ShowGameOverClientRpc(GetComponent<PlayerController>().GetPlayerId());
                 var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
                 if (attackPlayerController != null)
@@ -81,6 +83,7 @@ namespace Controllers
                 
                 GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
                 GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
+                */
             }
 #else
             this.gameObject.GetComponent<PlayerController>().Eliminate();
