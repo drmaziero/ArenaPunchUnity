@@ -68,7 +68,7 @@ namespace Controllers
                 Debug.Log("Elimination Player");
                 var eliminatedPlayerController = GetComponent<PlayerController>();
                 FixedString128Bytes attackerPlayerID = string.IsNullOrEmpty(eliminatedPlayerController.AttackPlayerId.Value.ToString()) ? "" : eliminatedPlayerController.AttackPlayerId.Value;
-                FixedString128Bytes eliminatedPlayerID = string.IsNullOrEmpty(eliminatedPlayerController.GetPlayerId()) ? "" : eliminatedPlayerController.GetPlayerId();
+                string eliminatedPlayerID = eliminatedPlayerController.GetPlayerId();
                 
                 this.gameObject.GetComponent<PlayerController>().EliminateClientRpc(eliminatedPlayerID);
             }

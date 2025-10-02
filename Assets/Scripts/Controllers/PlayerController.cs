@@ -352,13 +352,13 @@ namespace Controllers
         }
 
         [ClientRpc]
-        public void EliminateClientRpc(FixedString128Bytes playerId)
+        public void EliminateClientRpc(string playerId)
         {
             Debug.Log($"[Client]: Eliminate via Client RPC");
             if (!IsClient)
                 return;
             
-            if (AuthenticationService.Instance.PlayerId == playerId.ToString())
+            if (AuthenticationService.Instance.PlayerId == playerId)
                 StartCoroutine(PerformEliminate());
         }
 
