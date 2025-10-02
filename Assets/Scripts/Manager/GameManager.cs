@@ -185,6 +185,7 @@ namespace Manager
            if (PlayersByAuthId.ContainsKey(playerId))
                return;
            
+           Debug.Log($"Register: player Id = {playerId}, client id = {clientId}");
            PlayersByAuthId.Add(playerId,playerController);
            AuthIdByClientId.Add(clientId,playerId);
        }
@@ -210,6 +211,7 @@ namespace Manager
 
        public FixedString128Bytes GetAuthIdByClientId(ulong clientId)
        {
+           Debug.Log("Get Auth Id by Client Id");
            foreach (var x in AuthIdByClientId)
            {
                Debug.Log($"Auth Id by Client Id: {x.Key} => {x.Value}, param: {clientId}");
