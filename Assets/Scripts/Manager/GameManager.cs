@@ -179,16 +179,19 @@ namespace Manager
            }
        }
 
-       [ServerRpc]
-       public void RegisterServerRpc(PlayerController playerController, FixedString128Bytes playerId, ulong clientId)
+       [ServerRpc(RequireOwnership = false)]
+       public void RegisterServerRpc(NetworkObjectReference playerRef, FixedString128Bytes playerId, ulong clientId)
        {
            Debug.Log($"Try Register: Length = {PlayersByAuthId.Count}");
            if (PlayersByAuthId.ContainsKey(playerId))
                return;
-           
-           Debug.Log($"Register: player Id = {playerId}, client id = {clientId}");
-           PlayersByAuthId.Add(playerId,playerController);
-           AuthIdByClientId.Add(clientId,playerId);
+
+           if (playerRef.TryGet(out NetworkObject netObj))
+           {
+               Debug.Log($"Register: player Id = {playerId}, client id = {clientId}");
+               PlayersByAuthId.Add(playerId, netObj.GetComponent<PlayerController>());
+               AuthIdByClientId.Add(clientId, playerId);
+           }
        }
 
        [ServerRpc]

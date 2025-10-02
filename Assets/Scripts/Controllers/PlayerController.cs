@@ -120,7 +120,7 @@ namespace Controllers
             if (IsClient)
             {
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-                GameManager.Instance.RegisterServerRpc(this,playerId,OwnerClientId);
+                GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,OwnerClientId);
                 GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
             }
         }
