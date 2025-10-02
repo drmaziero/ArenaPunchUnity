@@ -26,6 +26,7 @@ namespace Manager
        public static GameManager Instance { get; private set; }
        private const int TargetPlayersToEscape = 2;
        private Dictionary<FixedString128Bytes, PlayerController> PlayersByAuthId { get; set; }
+       private Dictionary<ulong, FixedString128Bytes> AuthIdByClientId { get; set; }
        
 #if NOT_SERVER
         private int TotalPlayersEliminated { get; set; } = 0; 
@@ -47,6 +48,7 @@ namespace Manager
            Reset();
 #endif
            PlayersByAuthId = new Dictionary<FixedString128Bytes, PlayerController>();
+           AuthIdByClientId = new Dictionary<ulong, FixedString128Bytes>();
            TotalPlayersEliminated = new NetworkList<EliminateCountData>();
            TotalPlayersEliminated.OnListChanged += OnEliminationListChanged;
        }
@@ -147,7 +149,8 @@ namespace Manager
         #endif
        }
        
-       public void UpdateOrCreatePlayerElimination(FixedString128Bytes playerId)
+       [ServerRpc]
+       public void UpdateOrCreatePlayerEliminationServerRpc(FixedString128Bytes playerId)
        {
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
            {
@@ -163,8 +166,8 @@ namespace Manager
            TotalPlayersEliminated.Add(new EliminateCountData(){PlayerId = playerId, TotalPlayersEliminated = 0});
        }
        
-       
-       public void RemoveElimination(FixedString128Bytes playerId)
+       [ServerRpc]
+       public void RemoveEliminationServerRpc(FixedString128Bytes playerId)
        {
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
            {
@@ -176,16 +179,28 @@ namespace Manager
            }
        }
 
-       public void Register(PlayerController playerController, FixedString128Bytes playerId)
+       [ServerRpc]
+       public void RegisterServerRpc(PlayerController playerController, FixedString128Bytes playerId, ulong clientId)
        {
-           if (!PlayersByAuthId.ContainsKey(playerId))
-               PlayersByAuthId.Add(playerId,playerController);
+           if (PlayersByAuthId.ContainsKey(playerId))
+               return;
+           
+           PlayersByAuthId.Add(playerId,playerController);
+           AuthIdByClientId.Add(clientId,playerId);
        }
 
-       public void Unregister(FixedString128Bytes playerId)
+       [ServerRpc]
+       public void UnregisterServerRpc(FixedString128Bytes playerId)
        {
            PlayersByAuthId.Remove(playerId);
+           foreach (var x in AuthIdByClientId)
+           {
+               if (x.Value == playerId)
+                   AuthIdByClientId.Remove(x.Key);
+           }
        }
+       
+       
 
        public PlayerController GetPlayerControllerByAuthId(FixedString128Bytes playerId)
        {
@@ -198,18 +213,14 @@ namespace Manager
            return PlayersByAuthId[playerId];
        }
 
-       public FixedString128Bytes GetAuthIdByPlayerController(PlayerController playerController)
+       public FixedString128Bytes GetAuthIdByClientId(ulong clientId)
        {
-           if (playerController is null)
+           if (!AuthIdByClientId.ContainsKey(clientId))
                return "";
 
-           foreach (var element in PlayersByAuthId.Where(element => element.Value == playerController))
-           {
-               return element.Key;
-           }
-
-           return "";
+           return AuthIdByClientId[clientId];
        }
+   
 
        public struct EliminateCountData : INetworkSerializable, IEquatable<EliminateCountData>
        {

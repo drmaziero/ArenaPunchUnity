@@ -117,21 +117,21 @@ namespace Controllers
 
         protected override void OnNetworkPostSpawn()
         {
-            if (IsServer)
+            if (IsClient)
             {
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-                GameManager.Instance.Register(this,playerId);
-                GameManager.Instance.UpdateOrCreatePlayerElimination(playerId);
+                GameManager.Instance.RegisterServerRpc(this,playerId,OwnerClientId);
+                GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
             }
         }
 
         public override void OnNetworkDespawn()
         {
-            if (IsServer)
+            if (IsClient)
             {
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-                GameManager.Instance.Unregister(playerId);
-                GameManager.Instance.RemoveElimination(playerId);
+                GameManager.Instance.UnregisterServerRpc(playerId);
+                GameManager.Instance.RemoveEliminationServerRpc(playerId);
             }
         }
 
@@ -378,9 +378,9 @@ namespace Controllers
 #endif
             if (IsClient)
                 return AuthenticationService.Instance.PlayerId;
-            
+
             if (IsServer)
-                return GameManager.Instance.GetAuthIdByPlayerController(this).ToString();
+                return GameManager.Instance.GetAuthIdByClientId(OwnerClientId).ToString().Trim();
 
             return string.Empty;
         }
