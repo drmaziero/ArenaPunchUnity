@@ -77,7 +77,7 @@ namespace Controllers
         private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
         public NetworkVariable<FixedString128Bytes> AttackPlayerId { get; private set; } = new NetworkVariable<FixedString128Bytes>();
         private NetworkVariable<int> Coins { get; set; } = new NetworkVariable<int>(10);
-        private NetworkVariable<bool> CanAttack { get; set; } = new NetworkVariable<bool>();
+        private NetworkVariable<bool> CanAttack { get; set; } = new NetworkVariable<bool>(true);
 #endif
         private Vector2 ServerMovementInput { get; set; }
         private Vector2 FacingDirection { get; set; }
@@ -105,7 +105,6 @@ namespace Controllers
             
             CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
 #else
-            CanAttack.Value = true;
             if (IsLocalPlayer)
                 LocalPlayerMarked.SetActive(true);
 

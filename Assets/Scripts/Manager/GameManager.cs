@@ -149,7 +149,7 @@ namespace Manager
         #endif
        }
        
-       [ServerRpc]
+       [ServerRpc(RequireOwnership = false)]
        public void UpdateOrCreatePlayerEliminationServerRpc(FixedString128Bytes playerId)
        {
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
@@ -179,7 +179,7 @@ namespace Manager
            }
        }
 
-       [ServerRpc]
+       [ServerRpc(RequireOwnership = false)]
        public void RegisterServerRpc(NetworkObjectReference playerRef, FixedString128Bytes playerId, ulong clientId)
        {
            Debug.Log($"Try Register: Length = {PlayersByAuthId.Count}");
@@ -194,7 +194,7 @@ namespace Manager
            }
        }
        
-       [ServerRpc]
+       [ServerRpc(RequireOwnership = false)]
        public void DespawnPlayerServerRpc(ulong clientId)
        {
            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(clientId, out var netObj))
