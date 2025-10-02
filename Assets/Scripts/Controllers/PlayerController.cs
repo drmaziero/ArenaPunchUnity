@@ -76,7 +76,7 @@ namespace Controllers
         private NetworkVariable<bool> IsFlipping = new NetworkVariable<bool>(false);
         private NetworkVariable<int> PlayerCounter { get; set; } = new NetworkVariable<int>(0);
         public NetworkVariable<FixedString128Bytes> AttackPlayerId { get; private set; } = new NetworkVariable<FixedString128Bytes>();
-        private NetworkVariable<int> Coins { get; set; } = new NetworkVariable<int>(10);
+        public NetworkVariable<int> Coins { get; set; } = new NetworkVariable<int>(10);
         private NetworkVariable<bool> CanAttack { get; set; } = new NetworkVariable<bool>(true);
 #endif
         private Vector2 ServerMovementInput { get; set; }
@@ -432,18 +432,6 @@ namespace Controllers
             {
                 CoinsCounterUI.Instance.UpdateTotalCoins(Coins);
                 EndGameUI.Instance.UpdateCoins(Coins);
-            }
-#endif
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        public void AddCoinsServerRpc(FixedString128Bytes playerId, int amountCoins)
-        {
-#if !NOT_SERVER
-            var target = GameManager.Instance.GetPlayerControllerByAuthId(playerId);
-            if (target != null)
-            {
-                target.Coins.Value += amountCoins;
             }
 #endif
         }

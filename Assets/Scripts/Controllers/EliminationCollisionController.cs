@@ -66,21 +66,23 @@ namespace Controllers
             if (IsServer)
             {
                 Debug.Log("Elimination Player");
+                this.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
                 var eliminatedPlayerController = GetComponent<PlayerController>();
                 FixedString128Bytes attackerPlayerID = string.IsNullOrEmpty(eliminatedPlayerController.AttackPlayerId.Value.ToString()) ? "" : eliminatedPlayerController.AttackPlayerId.Value;
                 string eliminatedPlayerID = eliminatedPlayerController.GetPlayerId();
                 
-                this.gameObject.GetComponent<PlayerController>().EliminateClientRpc(eliminatedPlayerID);
+                eliminatedPlayerController.EliminateClientRpc(eliminatedPlayerID);
                 
                 yield return new WaitForSeconds(0.5f);
                 NetworkObject.Despawn(true);
                 
-                /*
-                ShowGameOverClientRpc(GetComponent<PlayerController>().GetPlayerId());
+                
+                ShowGameOverClientRpc(eliminatedPlayerController.GetPlayerId());
                 var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
                 if (attackPlayerController != null)
-                    attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
+                    attackPlayerController.Coins.Value +=  eliminatedPlayerController.GetHalfCoins();
                 
+                /*
                 GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
                 GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
                 */
