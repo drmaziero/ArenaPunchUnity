@@ -358,6 +358,7 @@ namespace Controllers
             if (!IsClient)
                 return;
             
+            Debug.Log($"[Client]: My ID: {AuthenticationService.Instance.PlayerId}, Player Id to Eliminate {playerId}");
             if (AuthenticationService.Instance.PlayerId == playerId)
                 StartCoroutine(PerformEliminate());
         }
