@@ -109,6 +109,7 @@ namespace Controllers
             {
                CoinsCounterUI.Instance.UpdateTotalCoins(newValue);
                CoinsCounterUI.Instance.UpdateAddCoinsAmount(newValue - oldValue);
+               EndGameUI.Instance.UpdateCoins(newValue);
             };
 
             CoinsCounterUI.Instance.UpdateTotalCoins(Coins.Value);
@@ -433,7 +434,6 @@ namespace Controllers
             if (target != null)
             {
                 target.Coins.Value += amountCoins;
-                EndGameUI.Instance.UpdateCoins(target.Coins.Value);
             }
 #endif
         }
@@ -446,7 +446,6 @@ namespace Controllers
             if (target != null)
             {
                 target.Coins.Value = 0;
-                EndGameUI.Instance.UpdateCoins(target.Coins.Value);
             }
 #endif
         }

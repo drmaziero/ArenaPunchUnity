@@ -37,9 +37,9 @@ namespace Controllers
         }
 
         [ClientRpc]
-        private void ShowGameOverClientRpc(FixedString128Bytes notifyPlayerId)
+        private void ShowGameOverClientRpc(string notifyPlayerId)
         {
-#if !NOT_SERVER
+#if NOT_SERVER
             if (IsOwner)
             {
                 Debug.LogWarning("Show Game Over UI");
@@ -71,19 +71,17 @@ namespace Controllers
                 string eliminatedPlayerID = eliminatedPlayerController.GetPlayerId();
                 
                 this.gameObject.GetComponent<PlayerController>().EliminateClientRpc(eliminatedPlayerID);
+                
+                yield return new WaitForSeconds(0.5f);
+                NetworkObject.Despawn(true);
+                ShowGameOverClientRpc(GetComponent<PlayerController>().GetPlayerId());
+                var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
+                if (attackPlayerController != null)
+                    attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
+                
+                GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
+                GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
             }
-            
-            yield return new WaitForSeconds(0.5f);
-            /*
-            NetworkObject.Despawn(true);
-            ShowGameOverClientRpc(GetComponent<PlayerController>().GetPlayerId());
-
-            var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
-            if (attackPlayerController != null)
-                attackPlayerController.AddCoinsServerRpc(attackerPlayerID, GetComponent<PlayerController>().GetHalfCoins());
-            GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
-            GameManager.Instance.UpdateOrCreatePlayerElimination(attackerPlayerID);
-            */
 #else
             this.gameObject.GetComponent<PlayerController>().Eliminate();
             yield return new WaitForSeconds(0.25f);
