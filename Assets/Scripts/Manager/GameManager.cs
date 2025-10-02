@@ -182,6 +182,7 @@ namespace Manager
        [ServerRpc]
        public void RegisterServerRpc(PlayerController playerController, FixedString128Bytes playerId, ulong clientId)
        {
+           Debug.Log($"Try Register: Length = {PlayersByAuthId.Count}");
            if (PlayersByAuthId.ContainsKey(playerId))
                return;
            
