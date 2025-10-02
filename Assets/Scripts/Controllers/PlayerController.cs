@@ -358,7 +358,7 @@ namespace Controllers
             if (!IsClient)
                 return;
             
-            if (AuthenticationService.Instance.PlayerId == playerId)
+            if (AuthenticationService.Instance.PlayerId == playerId.ToString())
                 StartCoroutine(PerformEliminate());
         }
 
