@@ -129,12 +129,20 @@ namespace Controllers
 
         private void UpdateClientAfterSpawn(ulong clientId)
         {
-            if (IsClient)
+            if (IsClient && IsOwner)
             {
-                FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-                GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,clientId);
-                GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
+                StartCoroutine(RegisterWhenReady(clientId));
             }
+        }
+
+        private IEnumerator RegisterWhenReady(ulong clientId)
+        {
+            while (!AuthenticationService.Instance.IsSignedIn)
+                yield return null;
+            
+            FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
+            GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,clientId);
+            GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
         }
 
         public void UpdateClientAfterDespawn(ulong clientId)
