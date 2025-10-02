@@ -136,23 +136,17 @@ namespace Controllers
             Debug.Log("Register When Ready...");
             while (!AuthenticationService.Instance.IsSignedIn)
                 yield return null;
-            
-            Debug.Log($"Send RPC: Player Id = {AuthenticationService.Instance.PlayerId}, client Id: {OwnerClientId}");
-            FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-            GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,OwnerClientId);
-            GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
-        }
 
-        public override void OnNetworkDespawn()
-        {
-            Debug.LogWarning("[Client]: Update Client After Despawn");
-            if (IsClient && IsOwner)
+            if (IsOwner)
             {
+                Debug.Log(
+                    $"Send RPC: Player Id = {AuthenticationService.Instance.PlayerId}, client Id: {OwnerClientId}");
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-                GameManager.Instance.UnregisterServerRpc(playerId);
-                GameManager.Instance.RemoveEliminationServerRpc(playerId);
+                GameManager.Instance.RegisterServerRpc(this.NetworkObject, playerId, OwnerClientId);
+                GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
             }
         }
+        
 
         public void FixedUpdate()
         {
@@ -396,6 +390,11 @@ namespace Controllers
             EliminationVFXSpriteRenderer.gameObject.SetActive(true);
             yield return new WaitForSeconds(EliminateVFXDuration);
             EliminationVFXSpriteRenderer.gameObject.SetActive(false);
+            
+#if !NOT_SERVER
+            if (IsClient && IsOwner)
+                GameManager.Instance.DespawnPlayerServerRpc(OwnerClientId);
+#endif
         }
 
         public string GetPlayerId()

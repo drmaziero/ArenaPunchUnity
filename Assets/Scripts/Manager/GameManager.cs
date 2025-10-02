@@ -179,7 +179,7 @@ namespace Manager
            }
        }
 
-       [ServerRpc(RequireOwnership = false)]
+       [ServerRpc]
        public void RegisterServerRpc(NetworkObjectReference playerRef, FixedString128Bytes playerId, ulong clientId)
        {
            Debug.Log($"Try Register: Length = {PlayersByAuthId.Count}");
@@ -193,16 +193,18 @@ namespace Manager
                AuthIdByClientId.Add(clientId, playerId);
            }
        }
-
-       [ServerRpc(RequireOwnership = false)]
-       public void UnregisterServerRpc(FixedString128Bytes playerId)
+       
+       [ServerRpc]
+       public void DespawnPlayerServerRpc(ulong clientId)
        {
-           PlayersByAuthId.Remove(playerId);
-           foreach (var x in AuthIdByClientId)
+           if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(clientId, out var netObj))
            {
-               if (x.Value == playerId)
-                   AuthIdByClientId.Remove(x.Key);
+               var playerId = AuthIdByClientId[clientId];
+               PlayersByAuthId.Remove(playerId);
+               AuthIdByClientId.Remove(clientId);
+               NetworkObject.Despawn(true);
            }
+           
        }
        
        public PlayerController GetPlayerControllerByAuthId(FixedString128Bytes playerId)
