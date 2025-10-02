@@ -436,18 +436,6 @@ namespace Controllers
 #endif
         }
         
-        [ServerRpc(RequireOwnership = false)]
-        public void LoseCoinsServerRpc(string playerId)
-        {
-#if !NOT_SERVER
-            var target = GameManager.Instance.GetPlayerControllerByAuthId(playerId);
-            if (target != null)
-            {
-                target.Coins.Value = 0;
-            }
-#endif
-        }
-        
         public int GetHalfCoins()
         {
 #if !NOT_SERVER

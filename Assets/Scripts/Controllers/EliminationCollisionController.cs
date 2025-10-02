@@ -46,8 +46,9 @@ namespace Controllers
                 EndGameUI.Instance.Show();
             }
 #endif
-            if (IsClient)
+            if (IsClient && IsOwner)
             {
+                Debug.Log($"[Client] Show Game Over: {notifyPlayerId} = {AuthenticationService.Instance.PlayerId} ");
                 if (notifyPlayerId == AuthenticationService.Instance.PlayerId)
                     EndGameUI.Instance.Show();
             }
@@ -81,11 +82,9 @@ namespace Controllers
                 var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
                 if (attackPlayerController != null)
                     attackPlayerController.Coins.Value +=  eliminatedPlayerController.GetHalfCoins();
-                
-                /*
-                GetComponent<PlayerController>().LoseCoinsServerRpc(AuthenticationService.Instance.PlayerId);
+
+                eliminatedPlayerController.Coins.Value = 0;
                 GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
-                */
             }
 #else
             this.gameObject.GetComponent<PlayerController>().Eliminate();
