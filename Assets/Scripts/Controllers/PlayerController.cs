@@ -112,20 +112,32 @@ namespace Controllers
             };
 
             CoinsCounterUI.Instance.UpdateTotalCoins(Coins.Value);
+
+            NetworkManager.Singleton.OnClientConnectedCallback += UpdateClientAfterSpawn;
+            NetworkManager.Singleton.OnClientDisconnectCallback += UpdateClientAfterDespawn;
 #endif
         }
+        
+        private void OnDisable()
+        {
+            if (IsClient)
+            {
+                NetworkManager.Singleton.OnClientConnectedCallback += UpdateClientAfterSpawn;
+                NetworkManager.Singleton.OnClientDisconnectCallback += UpdateClientAfterDespawn;
+            }
+        }
 
-        protected override void OnNetworkPostSpawn()
+        private void UpdateClientAfterSpawn(ulong clientId)
         {
             if (IsClient)
             {
                 FixedString128Bytes playerId = AuthenticationService.Instance.PlayerId;
-                GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,OwnerClientId);
+                GameManager.Instance.RegisterServerRpc(this.NetworkObject,playerId,clientId);
                 GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(playerId);
             }
         }
 
-        public override void OnNetworkDespawn()
+        public void UpdateClientAfterDespawn(ulong clientId)
         {
             if (IsClient)
             {
