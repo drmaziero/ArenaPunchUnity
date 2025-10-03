@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Controllers;
 using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -16,9 +15,12 @@ namespace Matchmaking
 {
     public class ClientConnect : MonoBehaviour
     {
-        [field: SerializeField] private Button FindMatchButton { get; set; }
-        [field: SerializeField] private string QueueName { get; set; }
-        [field: SerializeField] private TextMeshProUGUI StatusDebug { get; set; }
+        [field: SerializeField] 
+        private Button FindMatchButton { get; set; }
+        [field: SerializeField] 
+        private string QueueName { get; set; }
+        [field: SerializeField]
+        private TextMeshProUGUI StatusDebug { get; set; }
 
         private CreateTicketResponse createTicketResponse;
         private float pollTicketTimer;
@@ -33,15 +35,16 @@ namespace Matchmaking
             
 #if LOCAL_CLIENT
             var unityTransport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-            unityTransport.SetConnectionData("127.0.0.1", 7777);
+            unityTransport.SetConnectionData("127.0.0.1",7777);
             bool result = NetworkManager.Singleton.StartClient();
             StatusDebug.SetText($"[ClientLocal] Start Client: {result}");
+
 #else
             if (UnityServices.State != ServicesInitializationState.Initialized)
                 await UnityServices.InitializeAsync();
             if (!AuthenticationService.Instance.IsSignedIn)
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
-
+            
             NetworkManager.Singleton.OnClientConnectedCallback += ClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += ClientDisconnected;
 
@@ -57,28 +60,24 @@ namespace Matchmaking
 
         private void ClientDisconnected(ulong clientId)
         {
-            Debug.Log($"[Client] Disconnected: {NetworkManager.Singleton.DisconnectReason}");
-            var playerObj = NetworkManager.Singleton.LocalClient?.PlayerObject;
-            if (playerObj != null)
-                playerObj.GetComponent<PlayerController>().UnregisterAuthIdServerRpc(AuthenticationService.Instance.PlayerId);
+            Debug.Log($"[Client Disconnected]: {NetworkManager.Singleton.DisconnectReason}");
+            ServerBootstrap.Instance.UnregisterPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
         }
 
         private void ClientConnected(ulong clientId)
         {
-            Debug.Log("[Client] Connected!");
-            var playerObj = NetworkManager.Singleton.LocalClient?.PlayerObject;
-            if (playerObj != null)
-                playerObj.GetComponent<PlayerController>().RegisterAuthIdServerRpc(AuthenticationService.Instance.PlayerId);
+            Debug.Log($"[Client Connected]");
+            ServerBootstrap.Instance.RegisterPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
         }
 
         private async void FindMatchAsync()
         {
             FindMatchButton.gameObject.SetActive(false);
-
-            var players = new List<Player> { new Player(AuthenticationService.Instance.PlayerId) };
+            var players = new List<Player>()
+                { new(AuthenticationService.Instance.PlayerId, new Dictionary<string, object>()) };
             var attributes = new Dictionary<string, object>();
             var options = new CreateTicketOptions(QueueName, attributes);
-
+            
             createTicketResponse = await MatchmakerService.Instance.CreateTicketAsync(players, options);
             pollTicketTimer = pollTicketTimerMax;
         }
@@ -88,7 +87,7 @@ namespace Matchmaking
             if (createTicketResponse != null)
             {
                 pollTicketTimer -= Time.deltaTime;
-                if (pollTicketTimer <= 0f)
+                if (pollTicketTimer <= 0.0f)
                 {
                     pollTicketTimer = pollTicketTimerMax;
                     PollMatchmakerTicket();
@@ -98,29 +97,36 @@ namespace Matchmaking
 
         private async void PollMatchmakerTicket()
         {
+            Debug.Log("[Client] PollMatchmakerTicket");
             var ticketStatusResponse = await MatchmakerService.Instance.GetTicketAsync(createTicketResponse.Id);
 
+            if (ticketStatusResponse == null)
+            {
+                Debug.Log("[Client] ticket keep waiting");
+                return;
+            }
+            
             if (ticketStatusResponse?.Value is MultiplayAssignment assignment)
             {
                 switch (assignment.Status)
                 {
                     case MultiplayAssignment.StatusOptions.Found:
-                        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-                        transport.SetConnectionData(assignment.Ip, (ushort)assignment.Port);
+                        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(assignment.Ip, (ushort)assignment.Port);
                         bool result = NetworkManager.Singleton.StartClient();
-                        StatusDebug.SetText($"[Client] Connected to {assignment.Ip}:{assignment.Port} : [{result}]");
+                        StatusDebug.SetText($"[CLIENT] Start Client: {result} on {assignment.Ip}:{assignment.Port} : [{result}]");
                         break;
 
                     case MultiplayAssignment.StatusOptions.InProgress:
-                        StatusDebug.SetText("[Client] Matchmaking in progress...");
+                        StatusDebug.SetText("[CLIENT] In Progress.");
                         break;
 
                     case MultiplayAssignment.StatusOptions.Failed:
-                        StatusDebug.SetText($"[Client] Matchmaker failed: {assignment.Message}");
+                        Debug.Log($"[CLIENT] Matchmaker failed. {assignment.Message}");
+                        StatusDebug.SetText($"[CLIENT] Matchmaker failed. {assignment.Message}");
                         break;
 
                     case MultiplayAssignment.StatusOptions.Timeout:
-                        StatusDebug.SetText("[Client] Matchmaker timeout.");
+                        StatusDebug.SetText("[CLIENT] Matchmaker Timeout.");
                         break;
                 }
             }
