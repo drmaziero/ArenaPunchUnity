@@ -1,20 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Controllers;
-using Manager;
-using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
-using Unity.Services.Authentication;
-using Unity.Services.Core;
-using Unity.Services.Matchmaker;
-using Unity.Services.Matchmaker.Models;
-using Unity.Services.Multiplay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+using Unity.Services.Core;
+using Unity.Services.Multiplay;
+using Unity.Services.Matchmaker;
+using System.Threading.Tasks;
+using Manager;
+using Unity.Services.Matchmaker.Models;
 
 namespace Matchmaking
 {
@@ -72,8 +67,8 @@ namespace Matchmaking
                 IServerEvents serverEvents = await MultiplayService.Instance.SubscribeToServerEventsAsync(callbacks);
 
                 serverQuery =
-                    await MultiplayService.Instance.StartServerQueryHandlerAsync(4, "MyServerName", "ArenaPunch", "1.0",
-                        "Default");
+                    await MultiplayService.Instance.StartServerQueryHandlerAsync(
+                        (ushort)MaxPlayersToStart, "MyServerName", "ArenaPunch", "1.0", "Default");
 
                 var serverConfig = MultiplayService.Instance.ServerConfig;
                 if (serverConfig.AllocationId != "")
@@ -133,6 +128,7 @@ namespace Matchmaking
                 if (NetworkManager.Singleton.IsServer)
                 {
                     serverQuery.CurrentPlayers = (ushort)NetworkManager.Singleton.ConnectedClientsIds.Count;
+                    serverQuery.MaxPlayers = (ushort)MaxPlayersToStart;
                 }
                 serverQuery.UpdateServerCheck();
             }
@@ -233,6 +229,9 @@ namespace Matchmaking
             
             HandleUpdateBackfillTickets();
 
+            //Late Join: garantir que quem entrar depois receba o estado atual
+            SyncGameStateToLateJoiner(clientId);
+
             if (NetworkManager.Singleton.IsServer &&
                 NetworkManager.Singleton.SceneManager != null &&
                 connectedCount >= MinPlayersToStart &&
@@ -247,7 +246,14 @@ namespace Matchmaking
         private void OnClientDisconnected(ulong clientId)
         {
             connectedCount = Mathf.Max(0, connectedCount - 1);
-            HandleBackfillTickets();
+
+            if (GameManager.Instance.AuthIdByClientId.TryGetValue(clientId, out var authId))
+            {
+                connectedClients.Remove(authId.ToString());
+            }
+
+            HandleUpdateBackfillTickets(); // garantir update no backfill
+
             if (connectedCount <= 0)
             {
                 Debug.Log("[Server] Nenhum jogador conectado. Encerrando partida...");
@@ -337,12 +343,20 @@ namespace Matchmaking
         public void RegisterPlayerIdServerRpc(string clientId)
         {
             connectedClients.Add(clientId);
+            HandleUpdateBackfillTickets();
         }
 
         [ServerRpc]
         public void UnregisterPlayerIdServerRpc(string clientId)
         {
             connectedClients.Remove(clientId);
+            HandleUpdateBackfillTickets();
+        }
+
+        // Hook para você implementar sincronização de estado do jogo para late joiners
+        private void SyncGameStateToLateJoiner(ulong clientId)
+        {
+            Debug.Log($"[SERVER] Late join detectado para player {clientId}. Enviando estado atual do jogo...");
         }
     }
 }

@@ -26,9 +26,6 @@ namespace Manager
 
         private async void Awake()
         {
-#if UNITY_SERVER && !LOCAL_SERVER
-             await MultiplayService.Instance.UnreadyServerAsync();
-#endif
 #if NOT_SERVER
             for (int i = 0; i < TotalLocalPlayers; i++)
             {
