@@ -159,7 +159,7 @@ namespace Manager
                    var newData = TotalPlayersEliminated[i];
                    newData.TotalPlayersEliminated++;
                    TotalPlayersEliminated.RemoveAt(i);
-                   TotalPlayersEliminated.Insert(i,newData);
+                   TotalPlayersEliminated.Add(newData);
                    return;
                }
            }

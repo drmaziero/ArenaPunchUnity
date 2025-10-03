@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 5615044620749891973}
   - component: {fileID: 9158578966799286372}
   - component: {fileID: 5806651889597808347}
-  - component: {fileID: 3736268446453870351}
   - component: {fileID: 5977179096652803680}
   - component: {fileID: 5705258386370510334}
   - component: {fileID: 4100485166990382691}
@@ -177,9 +176,12 @@ MonoBehaviour:
   <LocalPlayerMarked>k__BackingField: {fileID: 6504431337550872932}
   <EliminationVFXSpriteRenderer>k__BackingField: {fileID: 2743727694278868854}
   <IsNotServerLocalPlayer>k__BackingField: 0
-  IsAttacking: 0
-  IsHit: 0
-  IsDead: 0
+  IsAttacking:
+    m_InternalValue: 0
+  IsHit:
+    m_InternalValue: 0
+  IsDead:
+    m_InternalValue: 0
 --- !u!114 &9158578966799286372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -223,20 +225,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80d7c879794dfda4687da0e400131852, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &3736268446453870351
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 978093126292656924}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45d3d1f0c7aa4f86a15331aa14475796, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  <PlayerInputActions>k__BackingField: {fileID: -944628639613478452, guid: 51c76bde44a4b496f93d143848d19186, type: 3}
-  <DisableInputs>k__BackingField: 0
 --- !u!210 &5977179096652803680
 SortingGroup:
   m_ObjectHideFlags: 0

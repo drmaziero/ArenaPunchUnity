@@ -87,9 +87,7 @@ namespace Controllers
         
         private const string IsMoving = "IsMoving";
        
-       
-      
-
+        
         private void Start()
         {
             ServerMovementInput = Vector2.zero;
@@ -126,6 +124,7 @@ namespace Controllers
             if (IsClient && IsOwner)
             {
                 Debug.Log("[Client] Start Register When Ready");
+                FindObjectOfType<InputController>().SetLocalPlayerController(this);
                 StartCoroutine(RegisterWhenReady());
             }
         }
@@ -374,11 +373,9 @@ namespace Controllers
         [ClientRpc]
         public void EliminateClientRpc(string playerId)
         {
-            Debug.Log($"[Client]: Eliminate via Client RPC");
             if (!IsClient)
                 return;
             
-            Debug.Log($"[Client]: My ID: {AuthenticationService.Instance.PlayerId}, Player Id to Eliminate {playerId}");
             if (AuthenticationService.Instance.PlayerId == playerId)
                 StartCoroutine(PerformEliminate());
         }

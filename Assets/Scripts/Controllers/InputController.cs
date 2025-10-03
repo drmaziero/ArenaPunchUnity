@@ -9,7 +9,6 @@ using UnityEngine.UI;
 
 namespace Controllers
 {
-    [RequireComponent(typeof(PlayerController))]
     public class InputController : NetworkBehaviour
     {
         [field: FormerlySerializedAs("<PlayerInputsAction>k__BackingField")]
@@ -28,7 +27,6 @@ namespace Controllers
         private void Awake()
         {
             LastNonZeroDirection = Vector3.forward;
-            PlayerController = GetComponent<PlayerController>();
 
             if (PlayerInputActions == null)
             {
@@ -47,6 +45,11 @@ namespace Controllers
             AttackAction = map.FindAction("Attack");
         }
 
+        public void SetLocalPlayerController(PlayerController localPlayerController)
+        {
+            PlayerController = localPlayerController;
+        }
+
         private void OnEnable()
         {
             PlayerInputActions.FindActionMap("Player")?.Enable();
@@ -63,6 +66,8 @@ namespace Controllers
              if (!IsOwner || !IsClient)
                 return;
 #endif
+            if (PlayerController == null)
+                return;
             
             if (AttackAction != null && AttackAction.WasPressedThisFrame())
             {
