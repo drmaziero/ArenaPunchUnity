@@ -78,7 +78,7 @@ namespace Controllers
                 {
                     attackPlayerController.Coins.Value += eliminatedPlayerController.GetHalfCoins();
                     eliminatedPlayerController.Coins.Value = 0;
-                    GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
+                    GameManager.Instance.UpdatePlayerElimination(attackerPlayerID);
                 }
 
                 IsEliminated.Value = false;
