@@ -60,7 +60,7 @@ namespace Manager
                case NetworkListEvent<EliminateCountData>.EventType.Add:
                    if (NetworkManager.Singleton.IsClient)
                    {
-                       if (changeEvent.Value.PlayerId.ToString() == AuthenticationService.Instance.PlayerId)
+                       if (changeEvent.Value.PlayerId.Equals(new FixedString128Bytes(AuthenticationService.Instance.PlayerId)))
                        {
                            Debug.Log($"[Client] Update Counter (Add): {TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated}");
                            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated);
@@ -72,7 +72,7 @@ namespace Manager
                case NetworkListEvent<EliminateCountData>.EventType.Insert:
                    if (NetworkManager.Singleton.IsClient)
                    {
-                       if (changeEvent.Value.PlayerId.ToString() == AuthenticationService.Instance.PlayerId)
+                       if (changeEvent.Value.PlayerId.Equals(new FixedString128Bytes(AuthenticationService.Instance.PlayerId)))
                        {
                            Debug.Log($"[Client] Update Counter (Update): {TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated}");
                            PlayerCounterUI.Instance.UpdateCounter(TargetPlayersToEscape - changeEvent.Value.TotalPlayersEliminated);
