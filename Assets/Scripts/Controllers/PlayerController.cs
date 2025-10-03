@@ -108,6 +108,9 @@ namespace Controllers
 
             Coins.OnValueChanged += (oldValue, newValue) =>
             {
+                if (!IsOwner)
+                    return;
+                
                CoinsCounterUI.Instance.UpdateTotalCoins(newValue);
                CoinsCounterUI.Instance.UpdateAddCoinsAmount(newValue - oldValue);
                EndGameUI.Instance.UpdateCoins(newValue);
