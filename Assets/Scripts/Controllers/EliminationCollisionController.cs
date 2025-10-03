@@ -72,12 +72,6 @@ namespace Controllers
                 FixedString128Bytes attackerPlayerID = string.IsNullOrEmpty(eliminatedPlayerController.AttackPlayerId.Value.ToString()) ? "" : eliminatedPlayerController.AttackPlayerId.Value;
                 string eliminatedPlayerID = eliminatedPlayerController.GetPlayerId();
                 
-                eliminatedPlayerController.EliminateClientRpc(eliminatedPlayerID);
-                
-                yield return new WaitForSeconds(0.5f);
-                NetworkObject.Despawn(true);
-                
-                
                 ShowGameOverClientRpc(eliminatedPlayerController.GetPlayerId());
                 var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
                 if (attackPlayerController != null)
@@ -85,6 +79,9 @@ namespace Controllers
 
                 eliminatedPlayerController.Coins.Value = 0;
                 GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
+                
+                eliminatedPlayerController.EliminateClientRpc(eliminatedPlayerID);
+                yield return null;
             }
 #else
             this.gameObject.GetComponent<PlayerController>().Eliminate();
