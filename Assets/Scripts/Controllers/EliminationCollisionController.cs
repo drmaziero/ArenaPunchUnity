@@ -80,6 +80,7 @@ namespace Controllers
                 eliminatedPlayerController.Coins.Value = 0;
                 GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
                 
+                IsEliminated.Value = false;
                 eliminatedPlayerController.EliminateClientRpc(eliminatedPlayerID);
                 yield return null;
             }
@@ -104,8 +105,6 @@ namespace Controllers
            
 #if NOT_SERVER
             IsEliminated = false;
-#else
-            IsEliminated.Value = false;
 #endif
             
         }

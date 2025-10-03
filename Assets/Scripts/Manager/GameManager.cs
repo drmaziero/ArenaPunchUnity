@@ -70,12 +70,6 @@ namespace Manager
 
                    break;
                case NetworkListEvent<EliminateCountData>.EventType.Insert:
-                   break;
-               case NetworkListEvent<EliminateCountData>.EventType.Remove:
-                   break;
-               case NetworkListEvent<EliminateCountData>.EventType.RemoveAt:
-                   break;
-               case NetworkListEvent<EliminateCountData>.EventType.Value:
                    if (NetworkManager.Singleton.IsClient)
                    {
                        if (changeEvent.Value.PlayerId.ToString() == AuthenticationService.Instance.PlayerId)
@@ -85,6 +79,12 @@ namespace Manager
                            EndGameUI.Instance.UpdatePlayerEliminated(changeEvent.Value.TotalPlayersEliminated);
                        }
                    }
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.Remove:
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.RemoveAt:
+                   break;
+               case NetworkListEvent<EliminateCountData>.EventType.Value:
                    break;
                case NetworkListEvent<EliminateCountData>.EventType.Clear:
                    break;
@@ -158,7 +158,8 @@ namespace Manager
                {
                    var newData = TotalPlayersEliminated[i];
                    newData.TotalPlayersEliminated++;
-                   TotalPlayersEliminated[i] = newData;
+                   TotalPlayersEliminated.RemoveAt(i);
+                   TotalPlayersEliminated.Insert(i,newData);
                    return;
                }
            }
@@ -197,12 +198,16 @@ namespace Manager
        [ServerRpc(RequireOwnership = false)]
        public void DespawnPlayerServerRpc(ulong clientId)
        {
-           if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(clientId, out var netObj))
+           if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId,out var client))
            {
-               var playerId = AuthIdByClientId[clientId];
-               PlayersByAuthId.Remove(playerId);
-               AuthIdByClientId.Remove(clientId);
-               NetworkObject.Despawn(true);
+               var playerObj = client.PlayerObject;
+               if (playerObj != null)
+               {
+                   var playerId = AuthIdByClientId[clientId];
+                   PlayersByAuthId.Remove(playerId);
+                   AuthIdByClientId.Remove(clientId);
+                   playerObj.Despawn(true);
+               }
            }
            
        }
@@ -217,12 +222,6 @@ namespace Manager
 
        public FixedString128Bytes GetAuthIdByClientId(ulong clientId)
        {
-           Debug.Log("Get Auth Id by Client Id");
-           foreach (var x in AuthIdByClientId)
-           {
-               Debug.Log($"Auth Id by Client Id: {x.Key} => {x.Value}, param: {clientId}");
-           }
-           
            return !AuthIdByClientId.ContainsKey(clientId) ? "" : AuthIdByClientId[clientId];
        }
    

@@ -39,12 +39,27 @@ namespace Controllers
 #endif
                 enemy.ApplyPush(direction);
                 enemy.GetHit();
+
+#if NOT_SERVER
                 ApplyHitVFX();
+#else
+                ApplyHitVFXClientRpc();
+#endif
             }
         }
         
+        
         private void ApplyHitVFX()
         {
+            StartCoroutine(PerformHitVFX());
+        }
+
+        [ClientRpc]
+        private void ApplyHitVFXClientRpc()
+        {
+            if (!IsClient)
+                return;
+            
             StartCoroutine(PerformHitVFX());
         }
 
