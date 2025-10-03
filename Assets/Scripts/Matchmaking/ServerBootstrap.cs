@@ -128,13 +128,6 @@ namespace Matchmaking
 
         private void Update()
         {
-            autoAllocateTimer -= Time.deltaTime;
-            if (autoAllocateTimer <= 0.0f)
-            {
-                autoAllocateTimer = 9999.0f;
-                OnAllocate(null);
-            }
-
             if (serverQuery != null)
             {
                 if (NetworkManager.Singleton.IsServer)
@@ -232,6 +225,12 @@ namespace Matchmaking
         private async void OnClientConnected(ulong clientId)
         {
             connectedCount++;
+            
+            if (GameManager.Instance.AuthIdByClientId.TryGetValue(clientId, out var authId))
+            {
+                connectedClients.Add(authId.ToString());
+            }
+            
             HandleUpdateBackfillTickets();
 
             if (NetworkManager.Singleton.IsServer &&
@@ -239,7 +238,6 @@ namespace Matchmaking
                 connectedCount >= MinPlayersToStart &&
                 SceneManager.GetActiveScene().name != GameManager.SceneNames.Game.ToString())
             {
-                await MatchmakerService.Instance.DeleteBackfillTicketAsync(backfillTickedId);
                 Debug.Log("[SERVER] Jogadores suficientes. Carregando cena Game...");
                 NetworkManager.Singleton.SceneManager.LoadScene(GameManager.SceneNames.Game.ToString(),
                     LoadSceneMode.Single);
@@ -249,6 +247,45 @@ namespace Matchmaking
         private void OnClientDisconnected(ulong clientId)
         {
             connectedCount = Mathf.Max(0, connectedCount - 1);
+            HandleBackfillTickets();
+            if (connectedCount <= 0)
+            {
+                Debug.Log("[Server] Nenhum jogador conectado. Encerrando partida...");
+                EndMatch();
+            }
+        }
+        
+        private async void EndMatch()
+        {
+            Debug.Log("[Server] Ending match...");
+            
+            if (!string.IsNullOrEmpty(backfillTickedId))
+            {
+                try
+                {
+                    await MatchmakerService.Instance.DeleteBackfillTicketAsync(backfillTickedId);
+                    Debug.Log("[Server] Backfill ticket deleted.");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[Server] Failed to delete backfill ticket: {e}");
+                }
+            }
+            
+            try
+            {
+                await MultiplayService.Instance.UnreadyServerAsync();
+                Debug.Log("[Server] Server unready.");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Server] Failed to unready: {e}");
+            }
+            
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
         }
 
         private async void HandleUpdateBackfillTickets()
@@ -256,8 +293,8 @@ namespace Matchmaking
             if (backfillTickedId != null && payloadAllocation != null)
             {
                 List<Player> playerList = new List<Player>();
-                foreach (var connectedClientId in connectedClients)
-                    playerList.Add(new Player(connectedClientId));
+                foreach (var authId in connectedClients)
+                    playerList.Add(new Player(authId));
 
                 MatchProperties matchProperties = new MatchProperties(payloadAllocation.MatchProperties.Teams,
                     playerList, payloadAllocation.MatchProperties.Region,

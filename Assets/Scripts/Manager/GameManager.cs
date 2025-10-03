@@ -26,7 +26,7 @@ namespace Manager
        public static GameManager Instance { get; private set; }
        private const int TargetPlayersToEscape = 2;
        private Dictionary<FixedString128Bytes, PlayerController> PlayersByAuthId { get; set; }
-       private Dictionary<ulong, FixedString128Bytes> AuthIdByClientId { get; set; }
+       public Dictionary<ulong, FixedString128Bytes> AuthIdByClientId { get; private set; }
        
 #if NOT_SERVER
         private int TotalPlayersEliminated { get; set; } = 0; 
