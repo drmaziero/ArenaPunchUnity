@@ -21,6 +21,8 @@ namespace Controllers
         private InputAction MoveAction { get; set; }
         private InputAction AttackAction { get; set; }
         private Vector3 LastNonZeroDirection { get; set; }
+        
+        [field: SerializeField]
         private PlayerController PlayerController { get; set; }
         
         
@@ -47,6 +49,7 @@ namespace Controllers
 
         public void SetLocalPlayerController(PlayerController localPlayerController)
         {
+            Debug.Log("[Client]: Setting Input");
             PlayerController = localPlayerController;
         }
 
@@ -62,10 +65,6 @@ namespace Controllers
 
         private void Update()
         {
-#if !NOT_SERVER
-             if (!IsOwner || !IsClient)
-                return;
-#endif
             if (PlayerController == null)
                 return;
             
@@ -85,14 +84,12 @@ namespace Controllers
                 #endif
             }
         }
-
-
+        
         private void FixedUpdate()
         {
-#if !NOT_SERVER
-            if (!IsOwner || !IsClient)
+            if (PlayerController == null)
                 return;
-#endif
+            
             if (MoveAction == null)
                 return;
 
