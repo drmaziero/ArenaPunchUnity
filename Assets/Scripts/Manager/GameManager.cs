@@ -160,6 +160,7 @@ namespace Manager
                    newData.TotalPlayersEliminated++;
                    TotalPlayersEliminated.RemoveAt(i);
                    TotalPlayersEliminated.Add(newData);
+                   Debug.Log($"[Server] Update Player Elimination {newData.PlayerId} = {newData.TotalPlayersEliminated}");
                    return;
                }
            }

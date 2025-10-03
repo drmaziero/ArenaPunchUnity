@@ -75,11 +75,12 @@ namespace Controllers
                 ShowGameOverClientRpc(eliminatedPlayerController.GetPlayerId());
                 var attackPlayerController = GameManager.Instance.GetPlayerControllerByAuthId(attackerPlayerID);
                 if (attackPlayerController != null)
-                    attackPlayerController.Coins.Value +=  eliminatedPlayerController.GetHalfCoins();
+                {
+                    attackPlayerController.Coins.Value += eliminatedPlayerController.GetHalfCoins();
+                    eliminatedPlayerController.Coins.Value = 0;
+                    GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
+                }
 
-                eliminatedPlayerController.Coins.Value = 0;
-                GameManager.Instance.UpdateOrCreatePlayerEliminationServerRpc(attackerPlayerID);
-                
                 IsEliminated.Value = false;
                 eliminatedPlayerController.EliminateClientRpc(eliminatedPlayerID);
                 yield return null;
