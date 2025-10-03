@@ -152,6 +152,7 @@ namespace Manager
        [ServerRpc(RequireOwnership = false)]
        public void UpdateOrCreatePlayerEliminationServerRpc(FixedString128Bytes playerId)
        {
+           Debug.Log($"[Server] Updare Or Create Elimination: {playerId}");
            for (var i = 0; i < TotalPlayersEliminated.Count; i++)
            {
                if (TotalPlayersEliminated[i].PlayerId == playerId)
