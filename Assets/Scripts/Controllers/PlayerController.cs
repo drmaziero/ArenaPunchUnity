@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Manager;
+using Matchmaking;
 using UI;
 using Unity.Collections;
 using Unity.Netcode;
@@ -126,6 +127,11 @@ namespace Controllers
             Debug.LogWarning("[Client]: Update Client After Spawn");
             if (IsClient && IsOwner)
             {
+                var authId = AuthenticationService.Instance.PlayerId;
+                Debug.Log($"[CLIENT] Enviando AuthId {authId} para o servidor...");
+
+                RegisterAuthIdServerRpc(authId);
+                
                 Debug.Log("[Client] Start Register When Ready");
                 FindObjectOfType<InputController>().SetLocalPlayerController(this);
                 StartCoroutine(RegisterWhenReady());
@@ -445,5 +451,38 @@ namespace Controllers
 #endif
         }
         
+        // Este ServerRpc é chamado pelo cliente ao se conectar
+        [ServerRpc]
+        public void RegisterAuthIdServerRpc(string authId)
+        {
+            if (!IsServer) return;
+
+            Debug.Log($"[SERVER] RegisterAuthIdServerRpc - Player {OwnerClientId} registrado com AuthId: {authId}");
+
+            // Vincula o AuthId no GameManager (opcional, se você já usa para tracking interno)
+            if (!GameManager.Instance.AuthIdByClientId.ContainsKey(OwnerClientId))
+                GameManager.Instance.AuthIdByClientId.Add(OwnerClientId, authId);
+            else
+                GameManager.Instance.AuthIdByClientId[OwnerClientId] = authId;
+
+            // Atualiza lista de jogadores do servidor
+            if (ServerBootstrap.Instance != null)
+                ServerBootstrap.Instance.RegisterPlayerIdServerRpc(authId);
+        }
+
+        // Este ServerRpc é chamado quando o cliente desconecta
+        [ServerRpc]
+        public void UnregisterAuthIdServerRpc(string authId)
+        {
+            if (!IsServer) return;
+
+            Debug.Log($"[SERVER] UnregisterAuthIdServerRpc - Player {OwnerClientId} removido (AuthId: {authId})");
+
+            if (GameManager.Instance.AuthIdByClientId.ContainsKey(OwnerClientId))
+                GameManager.Instance.AuthIdByClientId.Remove(OwnerClientId);
+
+            if (ServerBootstrap.Instance != null)
+                ServerBootstrap.Instance.UnregisterPlayerIdServerRpc(authId);
+        }
     }
 }
