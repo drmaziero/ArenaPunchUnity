@@ -230,8 +230,14 @@ namespace Matchmaking
             
             HandleUpdateBackfillTickets();
 
-            //Late Join: garantir que quem entrar depois receba o estado atual
-            SyncGameStateToLateJoiner(clientId);
+            // [LateJoin] 🔽 Verificação adicional: se o jogo já está na cena de gameplay,
+            // consideramos esse cliente um late joiner e sincronizamos o estado atual.
+            if (SceneManager.GetActiveScene().name == GameManager.SceneNames.Game.ToString())
+            {
+                Debug.Log($"[SERVER] Player {clientId} entrou após o jogo começar. Enviando estado atual...");
+                SyncGameStateToLateJoiner(clientId); // [LateJoin]
+                return;
+            }
 
             if (NetworkManager.Singleton.IsServer &&
                 NetworkManager.Singleton.SceneManager != null &&
