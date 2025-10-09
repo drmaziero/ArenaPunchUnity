@@ -163,13 +163,14 @@ namespace Matchmaking
         private async void OnAllocate(MultiplayAllocation obj)
         {
             Debug.Log($"Allocation received: {obj}");
-
+            
             if (alreadyAutoAllocated)
             {
                 Debug.Log("Already auto allocated");
                 return;
             }
-            
+
+            await SetMinPlayersFromMatchmakerPayload();
             SetupBackfillTickets();
             alreadyAutoAllocated = true;
             var serverConfig = MultiplayService.Instance.ServerConfig;
@@ -186,7 +187,6 @@ namespace Matchmaking
             
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-
             await MultiplayService.Instance.ReadyServerForPlayersAsync();
         }
 
@@ -362,6 +362,28 @@ namespace Matchmaking
         private void SyncGameStateToLateJoiner(ulong clientId)
         {
             Debug.Log($"[SERVER] Late join detectado para player {clientId}. Enviando estado atual do jogo...");
+        }
+
+        private async Task SetMinPlayersFromMatchmakerPayload()
+        {
+            try
+            {
+                var payload = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakerPayload>();
+
+                if (payload == null)
+                {
+                    Debug.LogWarning("[Server] Payload nulo - usando minPlayer Padrão");
+                    return;
+                }
+
+                int initialPlayers = payload.Players?.Count ?? 0;
+                MinPlayersToStart = Mathf.Max(1, initialPlayers);
+                Debug.Log($"[Server] min players to start is updated to {MinPlayersToStart}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Server] payload error: {e}");
+            }
         }
     }
 }
