@@ -157,6 +157,7 @@ namespace Matchmaking
         private async void OnDeallocate(MultiplayDeallocation obj)
         {
            Debug.Log($"Deallocation received: {obj}");
+           EndMatch();
         }
 
         private async void OnAllocate(MultiplayAllocation obj)
@@ -271,6 +272,7 @@ namespace Matchmaking
                 {
                     await MatchmakerService.Instance.DeleteBackfillTicketAsync(backfillTickedId);
                     Debug.Log("[Server] Backfill ticket deleted.");
+                    backfillTickedId = null;
                 }
                 catch (Exception e)
                 {
@@ -287,11 +289,22 @@ namespace Matchmaking
             {
                 Debug.LogWarning($"[Server] Failed to unready: {e}");
             }
-            
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+
+            try
             {
-                NetworkManager.Singleton.Shutdown();
+                if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+                {
+                    NetworkManager.Singleton.Shutdown();
+                }
             }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Server] Shutdown error: {e}");
+            }
+            
+#if UNITY_SERVER
+            Application.Quit(0);
+#endif
         }
 
         private async void HandleUpdateBackfillTickets()
@@ -316,14 +329,6 @@ namespace Matchmaking
                 {
                     Debug.Log($"[Server] Error: {e}");
                 }
-            }
-        }
-        
-        private void OnApplicationQuit()
-        {
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
-            {
-                NetworkManager.Singleton.Shutdown();
             }
         }
 
