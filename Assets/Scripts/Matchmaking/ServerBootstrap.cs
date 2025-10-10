@@ -157,18 +157,20 @@ namespace Matchmaking
         private async void OnDeallocate(MultiplayDeallocation obj)
         {
            Debug.Log($"Deallocation received: {obj}");
+           EndMatch();
         }
 
         private async void OnAllocate(MultiplayAllocation obj)
         {
             Debug.Log($"Allocation received: {obj}");
-
+            
             if (alreadyAutoAllocated)
             {
                 Debug.Log("Already auto allocated");
                 return;
             }
-            
+
+            await SetMinPlayersFromMatchmakerPayload();
             SetupBackfillTickets();
             alreadyAutoAllocated = true;
             var serverConfig = MultiplayService.Instance.ServerConfig;
@@ -185,7 +187,6 @@ namespace Matchmaking
             
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-
             await MultiplayService.Instance.ReadyServerForPlayersAsync();
         }
 
@@ -229,8 +230,14 @@ namespace Matchmaking
             
             HandleUpdateBackfillTickets();
 
-            //Late Join: garantir que quem entrar depois receba o estado atual
-            SyncGameStateToLateJoiner(clientId);
+            // [LateJoin] 🔽 Verificação adicional: se o jogo já está na cena de gameplay,
+            // consideramos esse cliente um late joiner e sincronizamos o estado atual.
+            if (SceneManager.GetActiveScene().name == GameManager.SceneNames.Game.ToString())
+            {
+                Debug.Log($"[SERVER] Player {clientId} entrou após o jogo começar. Enviando estado atual...");
+                SyncGameStateToLateJoiner(clientId); // [LateJoin]
+                return;
+            }
 
             if (NetworkManager.Singleton.IsServer &&
                 NetworkManager.Singleton.SceneManager != null &&
@@ -271,6 +278,7 @@ namespace Matchmaking
                 {
                     await MatchmakerService.Instance.DeleteBackfillTicketAsync(backfillTickedId);
                     Debug.Log("[Server] Backfill ticket deleted.");
+                    backfillTickedId = null;
                 }
                 catch (Exception e)
                 {
@@ -287,11 +295,22 @@ namespace Matchmaking
             {
                 Debug.LogWarning($"[Server] Failed to unready: {e}");
             }
-            
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+
+            try
             {
-                NetworkManager.Singleton.Shutdown();
+                if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+                {
+                    NetworkManager.Singleton.Shutdown();
+                }
             }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Server] Shutdown error: {e}");
+            }
+            
+#if UNITY_SERVER
+            Application.Quit(0);
+#endif
         }
 
         private async void HandleUpdateBackfillTickets()
@@ -316,14 +335,6 @@ namespace Matchmaking
                 {
                     Debug.Log($"[Server] Error: {e}");
                 }
-            }
-        }
-        
-        private void OnApplicationQuit()
-        {
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
-            {
-                NetworkManager.Singleton.Shutdown();
             }
         }
 
@@ -357,6 +368,28 @@ namespace Matchmaking
         private void SyncGameStateToLateJoiner(ulong clientId)
         {
             Debug.Log($"[SERVER] Late join detectado para player {clientId}. Enviando estado atual do jogo...");
+        }
+
+        private async Task SetMinPlayersFromMatchmakerPayload()
+        {
+            try
+            {
+                var payload = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakerPayload>();
+
+                if (payload == null)
+                {
+                    Debug.LogWarning("[Server] Payload nulo - usando minPlayer Padrão");
+                    return;
+                }
+
+                int initialPlayers = payload.Players?.Count ?? 0;
+                MinPlayersToStart = Mathf.Max(1, initialPlayers);
+                Debug.Log($"[Server] min players to start is updated to {MinPlayersToStart}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Server] payload error: {e}");
+            }
         }
     }
 }
