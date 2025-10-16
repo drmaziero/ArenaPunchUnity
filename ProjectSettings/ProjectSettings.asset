@@ -849,7 +849,7 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend:
     Server: 1
-    Standalone: 0
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration:
     Standalone: 1
@@ -861,8 +861,9 @@ PlayerSettings:
     PS4: 1
     PS5: 1
     QNX: 1
+    Server: 1
     Stadia: 1
-    Standalone: 2
+    Standalone: 1
     VisionOS: 1
     WebGL: 1
     Windows Store Apps: 1
@@ -953,7 +954,7 @@ PlayerSettings:
   embeddedLinuxEnableGamepadInput: 1
   hmiLogStartupTiming: 0
   hmiCpuConfiguration: 
-  apiCompatibilityLevel: 6
+  apiCompatibilityLevel: 3
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
   cloudProjectId: 55fff5ec-e4a6-4278-8056-a03640f737f3
